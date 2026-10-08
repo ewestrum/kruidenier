@@ -20,6 +20,9 @@ services:
       POSTGRES_USER: kruidenier
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD ontbreekt in .env}
       TZ: ${TZ:-Europe/Amsterdam}
+      # Subfolder that Postgres creates itself with its own permissions; the mounted
+      # folder on a Synology share carries ACLs that initdb cannot chmod.
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - ${DATA_DIR:-/volume1/docker/kruidenier}/db:/var/lib/postgresql/data
     healthcheck:

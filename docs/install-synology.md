@@ -20,6 +20,10 @@ docker/kruidenier/
 
 `[screenshot: File Station met de mappen]`
 
+> Maak `db/` en `backups/` echt aan: Container Manager maakt ontbrekende mappen voor
+> bind mounts **niet** zelf ("Bind mount failed: ... does not exist"). Postgres zet zijn data
+> in de submap `db/pgdata`, die het zelf aanmaakt met de juiste rechten.
+
 Zet in `project/` uit de repository:
 
 - `docker-compose.yml`
