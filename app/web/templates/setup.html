@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Account maken - Kruidenier{% endblock %}
+{% block main_class %}auth{% endblock %}
+{% block content %}
+<span class="wordmark">Kruidenier<span class="sprig">.</span></span>
+<h1>Maak je account</h1>
+<p class="hint" style="margin-top:6px">Dit wordt de beheerder van het huishouden. Huisgenoten voeg je daarna toe bij Instellingen.</p>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<form method="post" action="/setup" class="panel" style="margin-top:16px">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <div class="field">
+    <label for="household_name">Naam van het huishouden</label>
+    <input id="household_name" name="household_name" type="text" required value="{{ household_name or 'Thuis' }}">
+  </div>
+  <div class="field">
+    <label for="email">E-mailadres</label>
+    <input id="email" name="email" type="email" autocomplete="username" required value="{{ email or '' }}">
+  </div>
+  <div class="field">
+    <label for="password">Wachtwoord</label>
+    <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+    <p class="hint">Minstens 8 tekens.</p>
+  </div>
+  <button class="btn" type="submit">Account maken</button>
+</form>
+{% endblock %}

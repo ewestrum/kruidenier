@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Families - Kruidenier{% endblock %}
+{% block content %}
+<section class="page-head">
+  <h1>Families</h1>
+  <p>Een familie is een groep producten die voor jou uitwisselbaar zijn, zoals verschillende pakken halfvolle melk. Kruidenier rekent het verbruik per familie.</p>
+</section>
+<div class="field">
+  <label for="q">Zoeken</label>
+  <input id="q" name="q" type="search" value="{{ q }}" placeholder="Bijvoorbeeld melk"
+         hx-get="/families" hx-trigger="input changed delay:250ms, search" hx-target="#family-list" hx-push-url="true">
+</div>
+<div id="family-list">{% include "_family_list.html" %}</div>
+{% endblock %}

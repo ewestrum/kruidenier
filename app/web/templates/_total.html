@@ -1,0 +1,4 @@
+<div class="total" id="week-total" {% if oob %}hx-swap-oob="true"{% endif %}>
+  <span>Geschat totaal <small>{{ view.lines | length }} {{ "regel" if view.lines | length == 1 else "regels" }}</small></span>
+  <span>{{ view.total | euro }}</span>
+</div>

@@ -22,3 +22,6 @@ build/
 # local data
 /data/
 *.tar
+
+# UI preview renders (local screenshots only)
+app/web/static/_preview/

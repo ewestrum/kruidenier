@@ -1,0 +1,17 @@
+{% if families %}
+<ul class="plain">
+  {% for f in families %}
+  <li>
+    <div>
+      <a class="name" href="/families/{{ f.id }}">{{ f.name }}</a>
+      <div class="meta">
+        {{ f.n_purchases }}× gekocht{% if f.members | length > 1 %}, {{ f.members | length }} producten{% endif %}{% if f.due and not f.excluded %}, op rond {{ f.due | day }}{% endif %}
+      </div>
+    </div>
+    {% if f.excluded %}<span class="tag no">Uitgesloten</span>{% elif f.pinned %}<span class="tag">Vastgepind</span>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty-state">{% if q %}Geen familie gevonden voor "{{ q }}".{% else %}Nog geen families. Ze ontstaan vanzelf zodra je eerste bestellingen zijn geïmporteerd.{% endif %}</p>
+{% endif %}

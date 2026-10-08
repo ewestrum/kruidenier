@@ -1,17 +1,70 @@
-"""FastAPI app (`uvicorn app.web.main:app`). The UI routes follow in the next fase-1 step."""
+"""FastAPI app (`uvicorn app.web.main:app`)."""
 
+import logging
+import secrets
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select, text
+from starlette.middleware.sessions import SessionMiddleware
 
+from app.config import get_settings
 from app.db.models import WorkerHeartbeat
 from app.db.session import session_factory
+from app.web.deps import Forbidden, LoginRequired, render
+from app.web.ui import router
+
+log = logging.getLogger(__name__)
 
 HEARTBEAT_MAX_AGE = timedelta(minutes=10)
+STATIC = Path(__file__).parent / "static"
 
-app = FastAPI(title="Kruidenier")
+
+def _session_secret() -> str:
+    key = get_settings().secret_key
+    if not key:
+        log.warning("SECRET_KEY is empty: sessions will not survive a restart")
+        return secrets.token_urlsafe(48)
+    return key
+
+
+app = FastAPI(title="Kruidenier", docs_url=None, redoc_url=None, openapi_url=None)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=_session_secret(),
+    session_cookie="kruidenier",
+    max_age=60 * 60 * 24 * 30,
+    same_site="lax",
+    https_only=False,  # LAN/Tailscale over plain http is supported (SPEC §15)
+)
+app.mount("/static", StaticFiles(directory=STATIC), name="static")
+app.include_router(router)
+
+
+@app.exception_handler(LoginRequired)
+async def _login_required(request: Request, _: LoginRequired) -> Response:
+    if request.headers.get("hx-request"):
+        return Response(status_code=204, headers={"HX-Redirect": "/login"})
+    return RedirectResponse("/login", status_code=303)
+
+
+@app.exception_handler(Forbidden)
+async def _forbidden(request: Request, exc: Forbidden) -> Response:
+    if str(exc) == "csrf":
+        message = "Deze pagina was verlopen. Laad hem opnieuw en probeer het nog eens."
+    else:
+        message = "Alleen een beheerder van het huishouden kan dit doen."
+    response = render(request, "error.html", message=message)
+    response.status_code = 403
+    return response
+
+
+@app.get("/manifest.webmanifest")
+def manifest() -> FileResponse:
+    return FileResponse(STATIC / "manifest.webmanifest", media_type="application/manifest+json")
 
 
 @app.get("/healthz")

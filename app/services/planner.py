@@ -23,6 +23,7 @@ from app.domain.consumption import ModelParams, estimate_consumption, stock_on
 from app.domain.planning import FamilyInput, PlanSettings, Reason, decide
 
 WEEKDAYS_NL = ["ma", "di", "wo", "do", "vr", "za", "zo"]
+MANUAL = "manual"  # reason_code of lines added by a person; kept across rebuilds
 
 
 def plan_settings(household: Household) -> PlanSettings:
@@ -116,13 +117,20 @@ def recompute_stats(session: Session, household: Household, *, today: date) -> i
     return len(families)
 
 
-def reason_text(reason: Reason, due: date | None) -> str:
-    when = f"{WEEKDAYS_NL[due.weekday()]} {due.day}-{due.month}" if due else ""
+def reason_text(reason: Reason, due: date | None, today: date | None = None) -> str:
+    if due is None:
+        return "Vastgepind" if reason is Reason.PINNED_DUE else "Voorraad raakt op"
+    when = f"{WEEKDAYS_NL[due.weekday()]} {due.day}-{due.month}"
+    stock = (
+        f"Waarschijnlijk al op sinds {when}"
+        if today is not None and due < today
+        else f"Voorraad op rond {when}"
+    )
     match reason:
         case Reason.DUE:
-            return f"Voorraad op rond {when}" if due else "Voorraad raakt op"
+            return stock
         case Reason.PINNED_DUE:
-            return f"Vastgepind, voorraad op rond {when}" if due else "Vastgepind"
+            return f"Vastgepind. {stock}"
         case _:
             return ""
 
@@ -136,14 +144,28 @@ def build_draft_plan(
     ah_order_id: int | None = None,
     cutoff: datetime | None = None,
 ) -> Plan:
-    """(Re)build the draft for this delivery. Applied plans are never touched."""
+    """(Re)build the draft for this delivery. Applied plans are never touched.
+
+    Lines a person added by hand (reason "manual") survive a rebuild.
+    """
     existing = session.scalar(
         select(Plan).where(Plan.household_id == household.id, Plan.delivery_date == delivery_date)
     )
     if existing is not None and existing.status != "draft":
         return existing
+    manual_families: set[int] = set()
     if existing is not None:
-        session.execute(delete(PlanLine).where(PlanLine.plan_id == existing.id))
+        manual_families = set(
+            session.scalars(
+                select(PlanLine.family_id).where(
+                    PlanLine.plan_id == existing.id, PlanLine.reason_code == MANUAL
+                )
+            )
+        )
+        session.execute(
+            delete(PlanLine).where(PlanLine.plan_id == existing.id, PlanLine.reason_code != MANUAL)
+        )
+        session.expire(existing, ["lines"])
         plan = existing
     else:
         plan = Plan(household_id=household.id, delivery_date=delivery_date, status="draft")
@@ -158,6 +180,8 @@ def build_draft_plan(
         select(ProductFamily).where(ProductFamily.household_id == household.id)
     ).all()
     for family in families:
+        if family.id in manual_families:
+            continue
         data = load_family(session, family)
         if data.order_product is None:
             continue
@@ -184,7 +208,7 @@ def build_draft_plan(
                 ah_product_id=data.order_product.ah_id,
                 qty=decision.packs,
                 reason_code=decision.reason.value,
-                reason_text=reason_text(decision.reason, decision.due),
+                reason_text=reason_text(decision.reason, decision.due, today),
                 tier="propose",  # fase 1: concept only, nothing is applied
             )
         )

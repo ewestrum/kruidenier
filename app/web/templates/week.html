@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Deze week - Kruidenier{% endblock %}
+{% block content %}
+{% if not view.plan %}
+<div class="empty-state">
+  <h1>Nog geen concept</h1>
+  <p style="margin-top:10px">Kruidenier maakt elke ochtend om 06:45 een concept voor je volgende AH-levering. Daarvoor is een gekoppeld AH-account nodig met een geplande bezorging.</p>
+  {% if user.role == "admin" %}<a class="btn" href="/settings">AH-account koppelen</a>{% endif %}
+</div>
+{% else %}
+<section class="page-head">
+  <h1 class="delivery-day">{{ view.plan.delivery_date | day(true) | capitalize }}</h1>
+  {% if view.plan.cutoff %}
+  <p>Je kunt deze bestelling aanpassen tot {{ view.plan.cutoff | moment }}.</p>
+  {% endif %}
+  <p class="concept-note">Dit is een voorstel. Kruidenier zet nog niets in je AH-bestelling; bestel zelf in de AH-app.</p>
+</section>
+
+{% if view.lines %}
+<ul class="lines">
+  {% for line in view.lines %}{% include "_line.html" %}{% endfor %}
+</ul>
+{% else %}
+<div class="empty-state">
+  <p>Volgens Kruidenier heb je voor deze levering nog overal genoeg van. Voeg hieronder iets toe als je het daar niet mee eens bent.</p>
+</div>
+{% endif %}
+{% include "_total.html" %}
+
+<form method="post" action="/week/rebuild">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <button class="linkbutton" type="submit">Opnieuw berekenen</button>
+  <span class="hint">Gebeurt ook elke ochtend vanzelf. Zelf toegevoegde producten blijven staan.</span>
+</form>
+
+{% if view.suggestions %}
+<section class="section">
+  <h2>Vaak gekocht, niet in dit voorstel</h2>
+  <p class="hint">Mist er iets? Voeg het toe; dan leert Kruidenier ervan bij Families.</p>
+  <ul class="plain">
+    {% for s in view.suggestions %}
+    <li>
+      <div>
+        <a class="name" href="/families/{{ s.family_id }}">{{ s.name }}</a>
+        <div class="meta">{{ s.n_purchases }}× gekocht{% if s.due %}, op rond {{ s.due | day }}{% endif %}</div>
+      </div>
+      <form method="post" action="/week/add/{{ s.family_id }}">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button class="btn quiet" type="submit">Toevoegen</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endif %}
+{% endblock %}

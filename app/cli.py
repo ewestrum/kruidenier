@@ -8,7 +8,6 @@ migrate       database-migraties draaien
 
 import argparse
 import asyncio
-import re
 import sys
 from datetime import date
 
@@ -21,11 +20,6 @@ from app.db.session import session_factory
 from app.services.accounts import get_or_create_household, save_account, shared_limiter
 from app.services.notify import WebhookNotifier
 from app.services.sync import daily_prices, daily_sync
-
-
-def _extract_code(text: str) -> str:
-    m = re.search(r"[?&]code=([^&\s]+)", text)
-    return m.group(1) if m else text.strip()
 
 
 async def link_account(household_name: str, label: str) -> int:
@@ -43,7 +37,10 @@ async def link_account(household_name: str, label: str) -> int:
         print("2. Log in. Zoek daarna in de Network-tab de rode regel 'login-exit?code=...'.")
         print("3. Rechtsklik > Copy > Copy URL en plak hem hier.\n")
         for _ in range(3):
-            code = _extract_code(await asyncio.to_thread(input, "redirect-URL of code: "))
+            code = (
+                HttpAhClient.extract_code(await asyncio.to_thread(input, "redirect-URL of code: "))
+                or ""
+            )
             try:
                 tokens = await client.exchange_code(code)
                 break

@@ -1,0 +1,3 @@
+{# Response to a feedback button: the updated line (or nothing if it left the draft) + new total. #}
+{% if line %}{% with flash = kind in ("more", "less") %}{% include "_line.html" %}{% endwith %}{% endif %}
+{% with oob = true %}{% include "_total.html" %}{% endwith %}

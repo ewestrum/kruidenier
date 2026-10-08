@@ -21,6 +21,7 @@ from app.services.history import import_history
 from app.services.notify import Message, Notifier
 from app.services.planner import build_draft_plan, recompute_stats
 from app.services.prices import log_prices
+from app.services.week import reset_carryover_after_purchase
 
 log = logging.getLogger(__name__)
 
@@ -94,6 +95,8 @@ async def daily_sync(
             assert household is not None
             assign_families(s, household_id)
             recompute_stats(s, household, today=today)
+            if reset_carryover_after_purchase(s, household_id):
+                recompute_stats(s, household, today=today)
             if upcoming is not None and upcoming.delivery_date is not None:
                 plan = build_draft_plan(
                     s,

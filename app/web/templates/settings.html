@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Instellingen - Kruidenier{% endblock %}
+{% block content %}
+<section class="page-head">
+  <h1>Instellingen</h1>
+  <p>Voor huishouden {{ household.name }}.</p>
+</section>
+{% if notice %}<p class="notice" role="status">{{ notice }}</p>{% endif %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+
+<section class="section">
+  <h2>Bezorgen</h2>
+  <form method="post" action="/settings/household" style="margin-top:12px">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    {% for f in fields %}
+    <div class="field">
+      <label for="{{ f.key }}">{{ f.label }}</label>
+      <input id="{{ f.key }}" name="{{ f.key }}" type="number" inputmode="numeric"
+             min="{{ f.minimum | int }}" max="{{ f.maximum | int }}" step="1" value="{{ values[f.key] | int }}" required>
+      <p class="hint">{{ f.help }}</p>
+    </div>
+    {% endfor %}
+    <button class="btn" type="submit">Instellingen opslaan</button>
+  </form>
+</section>
+
+<section class="section">
+  <h2>Vakanties</h2>
+  <p class="hint">Op deze dagen verbruik je niets en maakt Kruidenier geen voorstel.</p>
+  {% if pauses %}
+  <ul class="plain" style="margin-top:10px">
+    {% for p in pauses %}
+    <li>
+      <span>{{ p.start | day }} tot en met {{ p.end | day }}{% if p.end < today %} <span class="meta">(voorbij)</span>{% endif %}</span>
+      <form method="post" action="/settings/pauses/{{ p.id }}/delete">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button class="btn quiet" type="submit">Verwijderen</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  <form method="post" action="/settings/pauses" class="row" style="margin-top:12px">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="field"><label for="start">Van</label><input id="start" name="start" type="date" required></div>
+    <div class="field"><label for="end">Tot en met</label><input id="end" name="end" type="date" required></div>
+    <div class="field" style="flex:0 0 auto"><button class="btn quiet" type="submit">Vakantie toevoegen</button></div>
+  </form>
+</section>
+
+<section class="section">
+  <h2>Mensen</h2>
+  <p class="hint">Huisgenoten zien het voorstel en geven feedback. Alleen beheerders zien deze instellingen.</p>
+  <ul class="plain" style="margin-top:10px">
+    {% for m in members %}
+    <li>
+      <div>
+        <strong>{{ m.email }}</strong>
+        <div class="meta">{{ "Beheerder" if m.role == "admin" else "Huisgenoot" }}{% if m.id == user.id %}, dat ben jij{% endif %}</div>
+      </div>
+      {% if m.id != user.id %}
+      <form method="post" action="/settings/users/{{ m.id }}/delete">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button class="btn quiet" type="submit" onclick="return confirm('{{ m.email }} verwijderen?')">Verwijderen</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  <form method="post" action="/settings/users" style="margin-top:12px" class="panel">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="row">
+      <div class="field"><label for="new_email">E-mailadres</label><input id="new_email" name="email" type="email" required></div>
+      <div class="field"><label for="new_password">Wachtwoord</label><input id="new_password" name="password" type="password" minlength="8" autocomplete="new-password" required></div>
+      <div class="field">
+        <label for="role">Rol</label>
+        <select id="role" name="role"><option value="member">Huisgenoot</option><option value="admin">Beheerder</option></select>
+      </div>
+    </div>
+    <button class="btn quiet" type="submit">Persoon toevoegen</button>
+  </form>
+</section>
+
+<section class="section">
+  <h2>AH-account</h2>
+  {% if accounts %}
+  <ul class="plain" style="margin-top:10px">
+    {% for a in accounts %}
+    <li>
+      <div>
+        <strong>{{ a.label }}</strong>
+        <div class="meta">Gekoppeld op {{ a.created_at | moment }}{% if a.is_order_account %}, gebruikt voor bestellingen{% endif %}</div>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="hint">Nog geen AH-account gekoppeld.</p>
+  {% endif %}
+
+  <details style="margin-top:14px" {% if not accounts %}open{% endif %}>
+    <summary><strong>{{ "Opnieuw koppelen" if accounts else "Account koppelen" }}</strong></summary>
+    <ol class="steps" style="margin-top:10px">
+      <li>Open Chrome of Edge op een computer en druk op F12. Ga naar het tabblad Network en zet <em>Preserve log</em> aan.</li>
+      <li>Open deze pagina in dat tabblad en log in bij AH:<br><a href="{{ login_url }}" target="_blank" rel="noopener"><code class="url">{{ login_url }}</code></a></li>
+      <li>Na het inloggen lijkt de pagina te blijven hangen. Typ <code>login-exit</code> in het filter van de Network-tab.</li>
+      <li>Rechtsklik op de rode regel, kies Copy en dan Copy URL, en plak hem hieronder.</li>
+    </ol>
+    <form method="post" action="/settings/ah" class="panel">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <div class="field">
+        <label for="redirect_url">Gekopieerde regel</label>
+        <input id="redirect_url" name="redirect_url" type="text" placeholder="appie://login-exit?code=…" required autocomplete="off">
+        <p class="hint">Een code werkt één keer en maar een paar minuten.</p>
+      </div>
+      <input type="hidden" name="label" value="{{ accounts[0].label if accounts else 'AH' }}">
+      <button class="btn" type="submit">Account koppelen</button>
+    </form>
+  </details>
+</section>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}{{ family.name }} - Kruidenier{% endblock %}
+{% block content %}
+{% set conf = {"high": "zeker", "medium": "redelijk zeker", "low": "nog onzeker"} %}
+<p style="padding-top:8px"><a href="/families">Alle families</a></p>
+<section class="page-head">
+  <h1>{{ family.name }}</h1>
+  <p>
+    {{ family.n_purchases }}× gekocht{% if family.last_purchase %}, laatst op {{ family.last_purchase | day }}{% endif %}.
+    {% if family.due and not family.excluded %}Raakt op rond {{ family.due | day }} ({{ conf[family.confidence] }}).{% endif %}
+  </p>
+</section>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+
+<section class="section">
+  <h2>Voorstellen</h2>
+  <div class="row" style="margin-top:10px">
+    <form method="post" action="/families/{{ family.id }}/flags">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="flag" value="pinned">
+      <input type="hidden" name="value" value="{{ 'false' if family.pinned else 'true' }}">
+      <button class="btn {{ 'quiet' if family.pinned }}" type="submit">{{ "Niet meer vastpinnen" if family.pinned else "Vastpinnen" }}</button>
+    </form>
+    <form method="post" action="/families/{{ family.id }}/flags">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="flag" value="excluded">
+      <input type="hidden" name="value" value="{{ 'false' if family.excluded else 'true' }}">
+      <button class="btn {{ 'quiet' if family.excluded else 'danger' }}" type="submit">{{ "Weer voorstellen" if family.excluded else "Nooit voorstellen" }}</button>
+    </form>
+  </div>
+  <p class="hint" style="margin-top:8px">Vastgepind komt ook in het voorstel als je het nog maar zelden kocht. Wat je nooit wilt laten voorstellen, sluit je uit.</p>
+</section>
+
+<section class="section">
+  <h2>Producten</h2>
+  <p class="hint">Kruidenier stelt het voorkeursproduct voor.</p>
+  <ul class="plain">
+    {% for m in family.members %}
+    <li>
+      <div>
+        <strong>{{ m.title }}</strong>
+        <div class="meta">{% if m.unit_size %}{{ m.unit_size }}, {% endif %}{{ m.times_bought }}× gekocht{% if m.preferred %}, voorkeur{% endif %}</div>
+      </div>
+      <div class="row" style="gap:6px">
+        {% if not m.preferred %}
+        <form method="post" action="/families/{{ family.id }}/preferred">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <input type="hidden" name="product_id" value="{{ m.product_id }}">
+          <button class="btn quiet" type="submit">Voorkeur</button>
+        </form>
+        {% endif %}
+        {% if family.members | length > 1 %}
+        <form method="post" action="/families/{{ family.id }}/split">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <input type="hidden" name="product_id" value="{{ m.product_id }}">
+          <button class="btn quiet" type="submit">Apart zetten</button>
+        </form>
+        {% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+{% if others %}
+<section class="section">
+  <h2>Samenvoegen</h2>
+  <p class="hint">Koop je dit en een andere familie door elkaar? Voeg ze samen; het verbruik telt dan als één.</p>
+  <form method="post" action="/families/{{ family.id }}/merge" class="row" style="margin-top:10px">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="field" style="margin:0">
+      <label for="source_id">Voeg toe aan {{ family.name }}</label>
+      <select id="source_id" name="source_id" required>
+        {% for o in others %}<option value="{{ o.id }}">{{ o.name }} ({{ o.n_purchases }}×)</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn quiet" type="submit">Samenvoegen</button>
+  </form>
+</section>
+{% endif %}
+
+<section class="section">
+  <h2>Naam</h2>
+  <form method="post" action="/families/{{ family.id }}/rename" class="row" style="margin-top:10px">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="field" style="margin:0">
+      <label for="name">Naam van de familie</label>
+      <input id="name" name="name" type="text" value="{{ family.name }}" required>
+    </div>
+    <button class="btn quiet" type="submit">Naam opslaan</button>
+  </form>
+</section>
+{% endblock %}

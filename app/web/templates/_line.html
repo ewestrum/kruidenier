@@ -1,0 +1,36 @@
+{# One plan line. `line` is a LineView. Swapped in place by the feedback buttons. #}
+{% set conf = {"high": "zeker", "medium": "redelijk zeker", "low": "nog onzeker"} %}
+<li class="line{% if flash %} flash{% endif %}" id="line-{{ line.id }}">
+  <div class="qty" aria-label="{{ line.qty }} stuks">{{ line.qty }}<small>×</small></div>
+  <h3>{{ line.title }}</h3>
+  <div class="facts">
+    {% if line.unit_size %}<span>{{ line.unit_size }}</span>{% endif %}
+    {% if line.price is not none %}<span class="price">{{ line.price | euro }}</span>{% endif %}
+    {% if line.is_bonus and line.bonus_mechanism %}<span class="bonus">Bonus: {{ line.bonus_mechanism }}</span>{% endif %}
+    {% if line.reason_code != "manual" %}<span>{{ line.n_purchases }}× gekocht, {{ conf[line.confidence] }}</span>{% endif %}
+  </div>
+  <div>
+    <p>{{ line.reason }}</p>
+    {% if line.stock_days is not none %}
+      {% set s = line.stock_days %}
+      <div class="stock{% if s <= 0 %} empty{% endif %}">
+        <div class="stock-bar" aria-hidden="true">
+          <span style="width: {{ line.stock_fill }}%"></span>
+        </div>
+        <p>
+          {% if s <= 0 %}Op vóór de levering
+          {% elif s == 1 %}Nog ongeveer 1 dag voorraad na de levering
+          {% else %}Nog ongeveer {{ s }} dagen voorraad na de levering{% endif %}
+        </p>
+      </div>
+    {% endif %}
+  </div>
+  <div class="actions" hx-target="#line-{{ line.id }}" hx-swap="outerHTML swap:200ms">
+    <button class="btn quiet" hx-post="/week/lines/{{ line.id }}/ok">Klopt</button>
+    <button class="btn quiet" hx-post="/week/lines/{{ line.id }}/more" aria-label="Meer {{ line.title }}">Meer</button>
+    <button class="btn quiet" hx-post="/week/lines/{{ line.id }}/less" aria-label="Minder {{ line.title }}">Minder</button>
+    <button class="btn quiet" hx-post="/week/lines/{{ line.id }}/enough_stock">Nog genoeg</button>
+    <button class="btn quiet no" hx-post="/week/lines/{{ line.id }}/not_anymore"
+            hx-confirm="{{ line.family_name }} niet meer voorstellen? Je kunt dit terugdraaien bij Families.">Niet meer</button>
+  </div>
+</li>

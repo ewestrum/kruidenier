@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Niet gelukt - Kruidenier{% endblock %}
+{% block content %}
+<div class="empty-state">
+  <h1>Dat lukte niet</h1>
+  <p style="margin-top:10px">{{ message }}</p>
+  <a class="btn quiet" href="/week">Naar deze week</a>
+</div>
+{% endblock %}

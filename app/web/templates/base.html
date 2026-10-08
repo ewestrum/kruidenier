@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}Kruidenier{% endblock %}</title>
+  <meta name="theme-color" content="#2f5d46">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600..800&display=swap">
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/htmx.min.js" defer></script>
+</head>
+<body hx-headers='{"X-CSRF-Token": "{{ csrf }}"}'>
+  {% if user %}
+  <header class="topbar">
+    <a class="wordmark" href="/week">Kruidenier<span class="sprig">.</span></a>
+    <nav class="nav" aria-label="Hoofdmenu">
+      <a href="/week" {% if nav == "week" %}aria-current="page"{% endif %}>Deze week</a>
+      <a href="/families" {% if nav == "families" %}aria-current="page"{% endif %}>Families</a>
+      {% if user.role == "admin" %}
+      <a href="/settings" {% if nav == "settings" %}aria-current="page"{% endif %}>Instellingen</a>
+      {% endif %}
+    </nav>
+  </header>
+  {% endif %}
+  <main class="{% block main_class %}wrap{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+  {% if user %}
+  <footer class="wrap" style="margin-top:40px">
+    <form method="post" action="/logout">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="linkbutton" type="submit">Uitloggen ({{ user.email }})</button>
+    </form>
+  </footer>
+  {% endif %}
+</body>
+</html>

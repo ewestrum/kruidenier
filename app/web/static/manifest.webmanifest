@@ -1,0 +1,14 @@
+{
+  "name": "Kruidenier",
+  "short_name": "Kruidenier",
+  "description": "Je boodschappen voor de volgende AH-levering, op basis van wat je verbruikt.",
+  "lang": "nl",
+  "start_url": "/week",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#eef1ea",
+  "theme_color": "#2f5d46",
+  "icons": [
+    { "src": "/static/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

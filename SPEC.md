@@ -130,6 +130,8 @@ Per `product_family` worden alle hoeveelheden omgerekend naar de basiseenheid (l
    - `enough_stock` → carryover omhoog en de due date schuift op.
    - `not_anymore` → familie wordt `excluded`.
    - `more` / `less` → correctiefactor op `r`.
+
+   *Fase 1, uitgewerkt:* `more`/`less` vermenigvuldigen de correctie met 1,15 of delen erdoor (begrensd tussen 0,25 en 4), en passen de conceptregel met één verpakking aan. `enough_stock` verhoogt de carryover tot de familie tot na de volgende planhorizon gedekt is (levering + cadans + marge + 1 dag), en minstens met de conceptregel zelf. Die carryover vervalt zodra de familie opnieuw gekocht is. Een product dat iemand zelf aan het concept toevoegt, blijft staan als het concept elke ochtend opnieuw wordt berekend.
 9. **Pauzes:** een vakantieperiode per huishouden. Die dagen tellen niet mee in het verbruik en er wordt geen plan gemaakt.
 10. **Ruis:** families met minder dan 3 aankopen in 180 dagen komen niet in het automatische plan, tenzij ze zijn vastgepind.
 

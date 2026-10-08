@@ -86,7 +86,12 @@ Zie je `no heartbeat yet`, wacht dan even: de worker schrijft elke minuut een he
 
 ## 5. Eerste AH-account koppelen
 
-Zolang de web-UI er nog niet is, koppel je het account via de terminal van de container:
+**Vanaf versie 0.2.0 via de web-UI:** open `http://<nas-ip>:8085`. De eerste keer maak je daar
+het beheerdersaccount aan. Daarna ga je naar **Instellingen → AH-account** en volg je de
+stappen op het scherm. De eerste import draait dan de volgende ochtend om 06:45 vanzelf, of
+meteen met `python -m app.cli sync` in de terminal (zie hieronder).
+
+**Via de terminal** (werkt altijd, ook in 0.1.0):
 
 1. Container Manager → **Container** → `kruidenier-web-1` → **Details** → **Terminal** →
    **Aanmaken** → bij *Opdracht* invullen:

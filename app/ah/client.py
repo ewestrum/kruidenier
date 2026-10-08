@@ -5,6 +5,7 @@ allowlist -> rate limit (serialised, ~1 req/s) -> retry with backoff -> schema v
 """
 
 import logging
+import re
 from collections.abc import Awaitable, Callable
 from datetime import date
 from typing import Any, Final, TypeVar
@@ -199,16 +200,28 @@ class HttpAhClient:
     # --- auth ---------------------------------------------------------------
 
     async def login_url(self) -> str:
+        return self.build_login_url(self._client_id)
+
+    @staticmethod
+    def build_login_url(client_id: str, redirect_uri: str = REDIRECT_URI) -> str:
         return str(
             httpx.URL(
                 LOGIN_URL,
                 params={
-                    "client_id": self._client_id,
+                    "client_id": client_id,
                     "response_type": "code",
-                    "redirect_uri": REDIRECT_URI,
+                    "redirect_uri": redirect_uri,
                 },
             )
         )
+
+    @staticmethod
+    def extract_code(text: str) -> str | None:
+        """The code from a pasted 'appie://login-exit?code=…' URL, or a bare code."""
+        text = text.strip()
+        if m := re.search(r"[?&]code=([^&\s]+)", text):
+            return m.group(1)
+        return text if re.fullmatch(r"[A-Za-z0-9._~-]{8,}", text) else None
 
     async def exchange_code(self, code: str) -> Tokens:
         data = await self._send(
