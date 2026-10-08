@@ -143,6 +143,22 @@ Of via SSH: `sudo docker exec kruidenier-backup-1 sh /scripts/backup.sh now`.
 
 ## Updaten
 
+**Snelst: via SSH, met één commando.** Zet eenmalig SSH aan: DSM → Configuratiescherm →
+**Terminal en SNMP** → *SSH-dienst inschakelen* (poort 22). Gebruik geen telnet: dat stuurt je
+wachtwoord onversleuteld. Daarna vanaf je computer (PowerShell of Terminal):
+
+```sh
+ssh <dsm-gebruiker>@<nas-ip>
+sudo sh /volume2/docker/Kruidenier-NAS/scripts/update.sh 0.4.0
+```
+
+Het script zet `TAG` in `.env`, haalt het nieuwe image op, herstart web, worker en backup, en
+wacht tot `/healthz` gezond is. Zonder versienummer herstart het gewoon met de huidige versie.
+Pas het pad aan als je project ergens anders staat. Maak bij grote updates eerst een backup:
+`sudo docker exec kruidenier-backup-1 sh /scripts/backup.sh now`.
+
+**Via Container Manager:**
+
 1. Maak een backup met `backup.sh now` (zie hierboven).
 2. Zet in `.env` de nieuwe versie: `TAG=0.2.0`.
 3. Container Manager → Project `kruidenier` → **Stoppen** → **Bouwen** (haalt het nieuwe image
