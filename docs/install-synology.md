@@ -35,7 +35,7 @@ Open `project/.env` (bijv. met de Text Editor-app) en vul in:
 | Variabele | Waarde |
 |---|---|
 | `IMAGE` | `ghcr.io/<jouw-github-naam>/kruidenier` |
-| `TAG` | een vaste versie, bijv. `v0.1.0` (niet `latest`) |
+| `TAG` | een vaste versie, bijv. `0.1.0` (niet `latest`) |
 | `DATA_DIR` | `/volume1/docker/kruidenier` (pas aan als je volume anders heet) |
 | `POSTGRES_PASSWORD` | een lang willekeurig wachtwoord |
 | `SECRET_KEY` | zie het commando in `.env.example` |
@@ -135,7 +135,7 @@ Of via SSH: `sudo docker exec kruidenier-backup-1 sh /scripts/backup.sh now`.
 ## Updaten
 
 1. Maak een backup met `backup.sh now` (zie hierboven).
-2. Zet in `.env` de nieuwe versie: `TAG=v0.2.0`.
+2. Zet in `.env` de nieuwe versie: `TAG=0.2.0`.
 3. Container Manager → Project `kruidenier` → **Stoppen** → **Bouwen** (haalt het nieuwe image
    op) → **Starten**.
 
