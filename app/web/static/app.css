@@ -117,6 +117,7 @@ p { margin: 0; }
   border: 1px solid transparent; border-radius: var(--radius-control);
   background: var(--leaf); color: var(--leaf-ink);
   font: 700 var(--step--1)/1 var(--font-body); cursor: pointer; text-decoration: none;
+  white-space: nowrap; overflow-wrap: normal;
 }
 .btn.quiet { background: var(--chip); color: var(--ink); }
 .btn.danger { background: none; border-color: var(--tomato); color: var(--tomato); }
@@ -131,6 +132,8 @@ input[type="date"], input[type="search"], input[type="url"], select, textarea {
   background: var(--surface); color: var(--ink); font: inherit;
 }
 .field { margin-bottom: 16px; }
+label.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 700; cursor: pointer; }
+label.check input { width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--leaf); flex: none; }
 .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
 .row > .field { flex: 1 1 140px; }
 
@@ -194,6 +197,13 @@ input[type="date"], input[type="search"], input[type="url"], select, textarea {
 .flash { animation: flash 900ms ease-out; }
 @keyframes flash { from { background: color-mix(in srgb, var(--mustard) 22%, transparent); } }
 
+.tag.in-ah { background: color-mix(in srgb, var(--leaf) 16%, var(--surface)); color: var(--leaf); font-weight: 700; }
+
+.send { margin: 8px 0 28px; }
+.send-btn { width: 100%; min-height: 52px; font-size: var(--step-0); }
+.send .hint { margin-top: 8px; text-align: center; }
+@media (min-width: 760px) { .send-btn { width: auto; padding: 0 28px; } .send .hint { text-align: left; } }
+
 .total {
   display: flex; justify-content: space-between; align-items: baseline;
   padding: 16px 0; font-family: var(--font-display); font-size: var(--step-1); font-weight: 700;
@@ -212,6 +222,8 @@ input[type="date"], input[type="search"], input[type="url"], select, textarea {
   padding: 12px 0; border-top: 1px solid var(--rule);
 }
 .plain li:last-child { border-bottom: 1px solid var(--rule); }
+.plain li > div:first-child { flex: 1 1 auto; min-width: 0; }
+.plain li > form, .plain li > .row, .plain li > .tag { flex: none; }
 .plain .meta { color: var(--ink-soft); font-size: var(--step--1); }
 .plain a.name { color: var(--ink); font-weight: 700; text-decoration: none; }
 .plain a.name:hover { text-decoration: underline; }

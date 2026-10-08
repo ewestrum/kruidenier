@@ -40,6 +40,7 @@ class LineView:
     n_purchases: int
     due: date | None
     stock_days: float | None  # days of stock left on delivery day
+    applied: bool = False  # already put in the AH order
 
     @property
     def line_total(self) -> float | None:
@@ -71,6 +72,10 @@ class WeekView:
     @property
     def total(self) -> float:
         return round(sum(line.line_total or 0 for line in self.lines), 2)
+
+    @property
+    def to_send(self) -> int:
+        return sum(1 for line in self.lines if not line.applied)
 
 
 def latest_plan(session: Session, household_id: int) -> PlanRow | None:
@@ -117,6 +122,7 @@ def line_view(session: Session, line: PlanLine, delivery: date) -> LineView:
         n_purchases=stats.n_purchases if stats else 0,
         due=stats.due_date if stats else None,
         stock_days=stock_days,
+        applied=line.applied,
     )
 
 
@@ -163,6 +169,8 @@ def give_feedback(
 ) -> PlanLine | None:
     """Apply a feedback button. Returns the line, or None if it left the draft."""
     line = _line_for_household(session, line_id, household_id)
+    if line.applied:
+        raise NotFound(line_id)
     family = session.get(ProductFamily, line.family_id)
     assert family is not None
     data = load_family(session, family)

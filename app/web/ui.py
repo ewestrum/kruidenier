@@ -1,23 +1,33 @@
 """HTML routes (Jinja2 + HTMX). Mobile first; every query is scoped to the user's household."""
 
 import logging
-from datetime import date
+from datetime import UTC, date, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy import select
+from sqlalchemy.orm import Session, sessionmaker
 
 from app.ah.client import HttpAhClient
-from app.ah.errors import AhError, AhHttpError
+from app.ah.errors import AhAuthError, AhError, AhHttpError, AhSchemaError
 from app.ah.token_crypto import TokenCipher
 from app.config import get_settings
 from app.db.models import Household
 from app.domain.feedback import FeedbackKind
-from app.services import family_admin, household_admin, users, week
-from app.services.accounts import get_or_create_household, save_account, shared_limiter
+from app.services import family_admin, household_admin, push, users, week
+from app.services.accounts import (
+    client_for,
+    get_or_create_household,
+    order_account,
+    save_account,
+    shared_limiter,
+)
+from app.services.autopilot import autopilot_settings
 from app.services.planner import build_draft_plan, recompute_stats
-from app.web.deps import AdminUser, CurrentUser, Db, check_csrf, render
+from app.web.deps import AdminUser, CurrentUser, Db, check_csrf, get_sessions, render
+
+Sessions = Annotated[sessionmaker[Session], Depends(get_sessions)]
 
 log = logging.getLogger(__name__)
 router = APIRouter(dependencies=[Depends(check_csrf)])
@@ -109,9 +119,98 @@ def home() -> Response:
 
 
 @router.get("/week", response_class=HTMLResponse)
-def week_page(request: Request, db: Db, user: CurrentUser) -> Response:
+def week_page(
+    request: Request, db: Db, user: CurrentUser, notice: str = "", error: str = ""
+) -> Response:
     view = week.week_view(db, user.household_id)
-    return render(request, "week.html", user, view=view, today=date.today(), nav="week")
+    pushes = push.push_actions(db, user.household_id, view.plan.id) if view.plan else []
+    pilot = autopilot_settings(_household(db, user.household_id))
+    return render(
+        request,
+        "week.html",
+        user,
+        view=view,
+        pushes=pushes,
+        autopilot=pilot.enabled,
+        autopilot_hours=f"{pilot.hours_before:g}",
+        has_account=order_account(db, user.household_id) is not None,
+        today=date.today(),
+        nav="week",
+        notice=notice,
+        error=error,
+    )
+
+
+def _ah_failure_text(e: AhError) -> str:
+    if isinstance(e, AhSchemaError):
+        return (
+            "AH gaf een onverwacht antwoord, dus Kruidenier is gestopt. Kijk in de AH-app "
+            "wat er in je bestelling staat."
+        )
+    if isinstance(e, AhAuthError):
+        return "De koppeling met AH werkt niet meer. Koppel je account opnieuw bij Instellingen."
+    return "AH was niet bereikbaar. Probeer het over een paar minuten opnieuw."
+
+
+@router.post("/week/push")
+async def push_week(db: Db, user: CurrentUser, sessions: Sessions) -> Response:
+    account = order_account(db, user.household_id)
+    if account is None:
+        return _redirect("/week?error=Koppel eerst een AH-account bij Instellingen.")
+    settings = get_settings()
+    try:
+        async with client_for(
+            account, settings=settings, cipher=TokenCipher(settings.fernet_key), sessions=sessions
+        ) as client:
+            result = await push.push_plan(
+                client,
+                db,
+                household_id=user.household_id,
+                actor=f"user:{user.email}",
+                now=datetime.now(UTC),
+            )
+    except push.PushError as e:
+        return _redirect(f"/week?error={e}")
+    except AhError as e:
+        log.warning("push failed: %s", e)
+        return _redirect(f"/week?error={_ah_failure_text(e)}")
+    if result.changed:
+        notice = f"{len(result.changed)} producten in je AH-bestelling gezet."
+    else:
+        notice = "Alles stond al in je AH-bestelling; er is niets veranderd."
+    if result.not_taken:
+        notice += f" AH nam niet over: {', '.join(result.not_taken)}."
+    return _redirect(f"/week?notice={notice}")
+
+
+@router.post("/week/undo/{action_id}")
+async def undo_week(db: Db, user: CurrentUser, sessions: Sessions, action_id: int) -> Response:
+    account = order_account(db, user.household_id)
+    if account is None:
+        return _redirect("/week?error=Koppel eerst een AH-account bij Instellingen.")
+    settings = get_settings()
+    try:
+        async with client_for(
+            account, settings=settings, cipher=TokenCipher(settings.fernet_key), sessions=sessions
+        ) as client:
+            result = await push.undo_push(
+                client,
+                db,
+                household_id=user.household_id,
+                action_id=action_id,
+                now=datetime.now(UTC),
+            )
+    except push.PushError as e:
+        return _redirect(f"/week?error={e}")
+    except AhError as e:
+        log.warning("undo failed: %s", e)
+        return _redirect(f"/week?error={_ah_failure_text(e)}")
+    notice = f"Teruggedraaid: {len(result.reverted)} producten."
+    if result.left_alone:
+        notice += (
+            f" Niet aangeraakt omdat ze sindsdien zijn aangepast: {', '.join(result.left_alone)}."
+        )
+    return _redirect(f"/week?notice={notice}")
 
 
 @router.post("/week/lines/{line_id}/{kind}", response_class=HTMLResponse)
@@ -262,6 +361,7 @@ def _settings_page(
         nav="settings",
         household=household,
         fields=household_admin.FIELDS,
+        order_fields=household_admin.ORDER_FIELDS,
         values=household_admin.settings_values(household),
         pauses=household_admin.list_pauses(db, household.id),
         members=household_admin.list_users(db, household.id),
@@ -286,6 +386,16 @@ async def settings_household(request: Request, db: Db, user: AdminUser) -> Respo
     except household_admin.SettingsError as e:
         return _settings_page(request, db, user, error=str(e))
     return _redirect("/settings?notice=Instellingen opgeslagen.")
+
+
+@router.post("/settings/ordering", response_class=HTMLResponse)
+async def settings_ordering(request: Request, db: Db, user: AdminUser) -> Response:
+    form = {k: str(v) for k, v in (await request.form()).items()}
+    try:
+        household_admin.update_order_settings(_household(db, user.household_id), form)
+    except household_admin.SettingsError as e:
+        return _settings_page(request, db, user, error=str(e))
+    return _redirect("/settings?notice=Instellingen voor bestellen opgeslagen.")
 
 
 @router.post("/settings/pauses", response_class=HTMLResponse)

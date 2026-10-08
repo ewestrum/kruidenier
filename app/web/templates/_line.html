@@ -25,6 +25,9 @@
       </div>
     {% endif %}
   </div>
+  {% if line.applied %}
+  <div class="actions"><span class="tag in-ah">In je AH-bestelling</span></div>
+  {% else %}
   <div class="actions" hx-target="#line-{{ line.id }}" hx-swap="outerHTML swap:200ms">
     <button class="btn quiet" hx-post="/week/lines/{{ line.id }}/ok">Klopt</button>
     <button class="btn quiet" hx-post="/week/lines/{{ line.id }}/more" aria-label="Meer {{ line.title }}">Meer</button>
@@ -33,4 +36,5 @@
     <button class="btn quiet no" hx-post="/week/lines/{{ line.id }}/not_anymore"
             hx-confirm="{{ line.family_name }} niet meer voorstellen? Je kunt dit terugdraaien bij Families.">Niet meer</button>
   </div>
+  {% endif %}
 </li>

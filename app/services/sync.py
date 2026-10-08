@@ -36,7 +36,7 @@ class SyncReport:
     errors: list[str] = field(default_factory=list)
 
 
-async def _report_ah_failure(notifier: Notifier, account: AhAccount, err: AhError) -> str:
+async def report_ah_failure(notifier: Notifier, account: AhAccount, err: AhError) -> str:
     if isinstance(err, AhSchemaError):
         title = "Kruidenier: AH-koppeling kapot"
         body = (
@@ -88,7 +88,7 @@ async def daily_sync(
                     if account.is_order_account:
                         upcoming = await client.get_upcoming_order(today=today)
             except AhError as e:
-                report.errors.append(await _report_ah_failure(notifier, account, e))
+                report.errors.append(await report_ah_failure(notifier, account, e))
 
         with sessions.begin() as s:
             household = s.get(Household, household_id)
@@ -133,5 +133,5 @@ async def daily_prices(
                 log.info("logged %d/%d prices", result.observed, result.requested)
                 return result.observed
         except AhError as e:
-            await _report_ah_failure(notifier, account, e)
+            await report_ah_failure(notifier, account, e)
     return 0

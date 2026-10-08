@@ -13,8 +13,18 @@
   {% if view.plan.cutoff %}
   <p>Je kunt deze bestelling aanpassen tot {{ view.plan.cutoff | moment }}.</p>
   {% endif %}
-  <p class="concept-note">Dit is een voorstel. Kruidenier zet nog niets in je AH-bestelling; bestel zelf in de AH-app.</p>
+  {% if not has_account %}
+  <p class="concept-note">Dit is een voorstel. Koppel een AH-account bij Instellingen om het in je AH-bestelling te kunnen zetten.</p>
+  {% elif pushes and not view.to_send %}
+  <p class="concept-note">Alles uit dit voorstel staat in je AH-bestelling. Afrekenen doe je zelf in de AH-app.</p>
+  {% elif autopilot %}
+  <p class="concept-note">Zekere producten zet Kruidenier zelf in je AH-bestelling, {{ autopilot_hours }} uur voor de sluitingstijd. De rest zet je erin met de knop onderaan.</p>
+  {% else %}
+  <p class="concept-note">Dit is een voorstel. Pas als je op de knop onderaan drukt, komt het in je AH-bestelling.</p>
+  {% endif %}
 </section>
+{% if notice %}<p class="notice" role="status">{{ notice }}</p>{% endif %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 
 {% if view.lines %}
 <ul class="lines">
@@ -26,6 +36,43 @@
 </div>
 {% endif %}
 {% include "_total.html" %}
+
+{% if has_account and view.to_send %}
+<form method="post" action="/week/push" class="send"
+      onsubmit="return confirm('{{ view.to_send }} {{ 'product' if view.to_send == 1 else 'producten' }} in je AH-bestelling zetten? Wat er al in staat, wordt nooit minder.')">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <button class="btn send-btn" type="submit">
+    {% if pushes %}Zet de overige {{ view.to_send }} in mijn AH-bestelling{% else %}Zet in mijn AH-bestelling{% endif %}
+  </button>
+  <p class="hint">Je rekent zelf af in de AH-app. Je kunt dit terugdraaien tot kort voor de sluitingstijd.</p>
+</form>
+{% endif %}
+
+{% if pushes %}
+<section class="section">
+  <h2>In je AH-bestelling gezet</h2>
+  <ul class="plain">
+    {% for p in pushes %}
+    <li>
+      <div>
+        <strong>{{ p.at | moment }}, {{ "automatisch" if p.payload_json.actor == "autopilot" else "door " ~ p.payload_json.actor.removeprefix("user:") }}</strong>
+        <div class="meta">
+          {% if p.payload_json.changed %}{{ p.payload_json.changed | join("; ") }}{% else %}Alles stond er al in.{% endif %}
+          {% if p.payload_json.not_taken %}<br>AH nam niet over: {{ p.payload_json.not_taken | join(", ") }}{% endif %}
+        </div>
+      </div>
+      {% if p.undo_payload_json.changes %}
+      <form method="post" action="/week/undo/{{ p.id }}"
+            onsubmit="return confirm('Deze wijzigingen in je AH-bestelling terugdraaien?')">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button class="btn quiet" type="submit">Terugdraaien</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
 
 <form method="post" action="/week/rebuild">
   <input type="hidden" name="csrf" value="{{ csrf }}">

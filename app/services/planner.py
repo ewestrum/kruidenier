@@ -21,6 +21,7 @@ from app.db.models import (
 from app.domain import consumption as cm
 from app.domain.consumption import ModelParams, estimate_consumption, stock_on
 from app.domain.planning import FamilyInput, PlanSettings, Reason, decide
+from app.domain.tiers import assign_tier, usual_packs
 
 WEEKDAYS_NL = ["ma", "di", "wo", "do", "vr", "za", "zo"]
 MANUAL = "manual"  # reason_code of lines added by a person; kept across rebuilds
@@ -201,6 +202,12 @@ def build_draft_plan(
         )
         if not decision.include:
             continue
+        tier = assign_tier(
+            reason=decision.reason,
+            confidence=decision.estimate.confidence,
+            packs=decision.packs,
+            usual=usual_packs([p.amount for p in data.purchases], data.pack_size),
+        )
         session.add(
             PlanLine(
                 plan_id=plan.id,
@@ -209,7 +216,7 @@ def build_draft_plan(
                 qty=decision.packs,
                 reason_code=decision.reason.value,
                 reason_text=reason_text(decision.reason, decision.due, today),
-                tier="propose",  # fase 1: concept only, nothing is applied
+                tier=tier.value,
             )
         )
     session.flush()

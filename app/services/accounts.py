@@ -53,6 +53,16 @@ def save_account(
     return account
 
 
+def order_account(session: Session, household_id: int) -> AhAccount | None:
+    """The account whose orders Kruidenier fills (SPEC §3: one 'bestel-account')."""
+    return session.scalar(
+        select(AhAccount)
+        .where(AhAccount.household_id == household_id, AhAccount.is_order_account.is_(True))
+        .order_by(AhAccount.id)
+        .limit(1)
+    )
+
+
 def client_for(
     account: AhAccount,
     *,

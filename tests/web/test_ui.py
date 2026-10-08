@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import get_settings
 from app.db.models import (
+    ActionLog,
     AhAccount,
     Household,
     Pause,
@@ -28,6 +29,7 @@ from app.services.planner import build_draft_plan, recompute_stats
 from app.services.users import create_user
 from app.web.deps import get_sessions
 from app.web.main import app
+from tests.services.fake_order import FakeOrder
 
 PASSWORD = "geheim-genoeg"
 D0 = date.today() - timedelta(weeks=6)
@@ -220,7 +222,7 @@ def test_week_shows_draft_lines_and_suggestions(
     assert "AH Halfvolle melk" in html
     assert "Voorraad op rond" in html
     assert "Vaak gekocht, niet in dit voorstel" in html and "Knaks" in html
-    assert "zet nog niets in je AH-bestelling" in html
+    assert "Koppel een AH-account bij Instellingen" in html
 
 
 def _line_qty(sessions: sessionmaker[Session], line_id: int) -> int | None:
@@ -297,6 +299,119 @@ def test_manual_addition_survives_rebuild(
     client.post("/week/rebuild", data={"csrf": token})
     html = client.get("/week").text
     assert "Unox Knaks" in html and "Zelf toegevoegd" in html
+
+
+# --- push to AH (fase 2) ------------------------------------------------------------
+
+
+def fake_ah(
+    monkeypatch: pytest.MonkeyPatch, sessions: sessionmaker[Session], hid: int
+) -> FakeOrder:
+    """Link an account and route the UI's AH client to an in-memory order."""
+    with sessions.begin() as s:
+        plan = s.scalars(select(Plan)).one()
+        order = FakeOrder(order_id=4242, delivery=plan.delivery_date)
+        plan.ah_order_id, plan.cutoff = order.order_id, order.cutoff
+        s.add(AhAccount(household_id=hid, label="AH", tokens_enc=b"x"))
+
+    class _Ctx:
+        async def __aenter__(self) -> FakeOrder:
+            return order
+
+        async def __aexit__(self, *exc: object) -> None:
+            return None
+
+    monkeypatch.setattr("app.web.ui.client_for", lambda *a, **k: _Ctx())
+    monkeypatch.setenv("FERNET_KEY", Fernet.generate_key().decode())
+    get_settings.cache_clear()
+    return order
+
+
+def test_push_and_undo_from_week_page(
+    client: TestClient, sessions: sessionmaker[Session], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    hid = make_household(sessions, "Thuis", "a@b.nl")
+    seed_plan(sessions, hid)
+    order = fake_ah(monkeypatch, sessions, hid)
+    token = login(client, "a@b.nl")
+    assert "Zet in mijn AH-bestelling" in client.get("/week").text
+
+    r = client.post("/week/push", data={"csrf": token}, follow_redirects=True)
+    assert "producten in je AH-bestelling gezet" in r.text
+    assert order.items.get(1525, 0) > 0
+    assert "In je AH-bestelling" in r.text and "Terugdraaien" in r.text
+    assert "Zet in mijn AH-bestelling" not in r.text  # nothing left to send
+
+    with sessions() as s:
+        push_id = s.scalars(select(ActionLog).where(ActionLog.action == "ah.push")).one().id
+    r = client.post(f"/week/undo/{push_id}", data={"csrf": token}, follow_redirects=True)
+    assert "Teruggedraaid" in r.text
+    assert 1525 not in order.items
+    assert "Zet in mijn AH-bestelling" in r.text
+    get_settings.cache_clear()
+
+
+def test_push_refusal_is_shown(
+    client: TestClient, sessions: sessionmaker[Session], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    hid = make_household(sessions, "Thuis", "a@b.nl")
+    seed_plan(sessions, hid)
+    order = fake_ah(monkeypatch, sessions, hid)
+    order.order_id = 1  # the delivery changed since the draft
+    token = login(client, "a@b.nl")
+    r = client.post("/week/push", data={"csrf": token}, follow_redirects=True)
+    assert "niet meer die van dit voorstel" in r.text and order.writes == 0
+    get_settings.cache_clear()
+
+
+def test_push_without_account(client: TestClient, sessions: sessionmaker[Session]) -> None:
+    hid = make_household(sessions, "Thuis", "a@b.nl")
+    seed_plan(sessions, hid)
+    token = login(client, "a@b.nl")
+    assert "Zet in mijn AH-bestelling" not in client.get("/week").text
+    r = client.post("/week/push", data={"csrf": token}, follow_redirects=True)
+    assert "Koppel eerst een AH-account" in r.text
+
+
+def test_feedback_on_pushed_line_is_refused(
+    client: TestClient, sessions: sessionmaker[Session], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    hid = make_household(sessions, "Thuis", "a@b.nl")
+    line_id = seed_plan(sessions, hid)
+    fake_ah(monkeypatch, sessions, hid)
+    token = login(client, "a@b.nl")
+    client.post("/week/push", data={"csrf": token})
+    r = client.post(f"/week/lines/{line_id}/more", headers={"X-CSRF-Token": token})
+    assert r.status_code == 404
+    get_settings.cache_clear()
+
+
+def test_order_settings(client: TestClient, sessions: sessionmaker[Session]) -> None:
+    hid = make_household(sessions, "Thuis", "a@b.nl")
+    token = login(client, "a@b.nl")
+    r = client.post(
+        "/settings/ordering",
+        data={
+            "csrf": token,
+            "autopilot_enabled": "on",
+            "max_push_amount": "120",
+            "autopilot_hours_before": "12",
+        },
+        follow_redirects=True,
+    )
+    assert "opgeslagen" in r.text and "checked" in r.text
+    client.post(
+        "/settings/ordering",
+        data={"csrf": token, "max_push_amount": "120", "autopilot_hours_before": "12"},
+    )
+    with sessions() as s:
+        h = s.get(Household, hid)
+        assert h is not None
+        assert h.settings_json == {
+            "max_push_amount": 120,
+            "autopilot_hours_before": 12,
+            "autopilot_enabled": False,
+        }
 
 
 # --- Families ---------------------------------------------------------------------

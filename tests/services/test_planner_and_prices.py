@@ -65,7 +65,7 @@ def test_draft_plan_contains_due_staple(
         [line] = plan.lines
         assert line.ah_product_id == MILK
         assert line.qty == 3  # 2 l/week, 9-day horizon, 1 l packs
-        assert line.tier == "propose"
+        assert line.tier == "auto"  # weekly, sure, usual quantity
         assert line.reason_text.startswith("Voorraad op rond")
         stats = s.get(FamilyStats, line.family_id)
         assert stats is not None and stats.confidence == "high"

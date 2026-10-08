@@ -47,15 +47,48 @@ FIELDS: tuple[SettingField, ...] = (
     ),
 )
 
+# Fase 2: putting the draft in the AH order (SPEC §9 guardrails).
+ORDER_FIELDS: tuple[SettingField, ...] = (
+    SettingField(
+        "max_push_amount",
+        "Maximaal bedrag per keer in euro",
+        "Kruidenier voegt nooit in één keer meer toe dan dit bedrag, ook niet automatisch.",
+        150,
+        10,
+        1000,
+    ),
+    SettingField(
+        "autopilot_hours_before",
+        "Automatisch aanvullen, uren vóór de sluitingstijd",
+        "Zo heb je nog tijd om bij te sturen voordat AH de bestelling sluit.",
+        24,
+        1,
+        72,
+    ),
+)
+AUTOPILOT_KEY = "autopilot_enabled"
 
-def settings_values(household: Household) -> dict[str, float]:
+
+def settings_values(household: Household) -> dict[str, Any]:
     s: dict[str, Any] = household.settings_json or {}
-    return {f.key: s.get(f.key, f.default) for f in FIELDS}
+    values: dict[str, Any] = {f.key: s.get(f.key, f.default) for f in FIELDS + ORDER_FIELDS}
+    values[AUTOPILOT_KEY] = bool(s.get(AUTOPILOT_KEY, False))
+    return values
 
 
-def update_settings(household: Household, form: dict[str, str]) -> None:
+def update_order_settings(household: Household, form: dict[str, str]) -> None:
+    update_settings(household, form, fields=ORDER_FIELDS)
+    household.settings_json = {
+        **household.settings_json,
+        AUTOPILOT_KEY: form.get(AUTOPILOT_KEY) == "on",
+    }
+
+
+def update_settings(
+    household: Household, form: dict[str, str], *, fields: tuple[SettingField, ...] = FIELDS
+) -> None:
     new = dict(household.settings_json or {})
-    for f in FIELDS:
+    for f in fields:
         raw = form.get(f.key, "").strip().replace(",", ".")
         try:
             value = float(raw)

@@ -19,6 +19,7 @@ from app.ah.token_crypto import TokenCipher
 from app.config import get_settings
 from app.db.models import PriceObservation, WorkerHeartbeat
 from app.db.session import session_factory
+from app.services.autopilot import run_autopilot
 from app.services.notify import WebhookNotifier
 from app.services.sync import daily_prices, daily_sync
 
@@ -59,6 +60,20 @@ async def sync_job() -> None:
     log.info("sync done: %s", report)
 
 
+async def autopilot_job() -> None:
+    """Every 30 minutes; only acts for households that switched it on, inside their window."""
+    settings = get_settings()
+    report = await run_autopilot(
+        session_factory(),
+        settings=settings,
+        cipher=TokenCipher(settings.fernet_key),
+        notifier=WebhookNotifier(settings),
+        now=datetime.now(UTC),
+    )
+    if report:
+        beat(f"autopilot: {'; '.join(report)}"[:500])
+
+
 def prices_logged_today() -> bool:
     with session_factory()() as s:
         n = s.scalar(select(func.count()).where(PriceObservation.observed_on == date.today()))
@@ -77,6 +92,9 @@ async def main() -> None:
     )
     scheduler.add_job(
         sync_job, CronTrigger(hour=6, minute=45), id="sync", coalesce=True, max_instances=1
+    )
+    scheduler.add_job(
+        autopilot_job, "interval", minutes=30, id="autopilot", coalesce=True, max_instances=1
     )
     scheduler.start()
     log.info("worker started (tz=%s)", settings.tz)

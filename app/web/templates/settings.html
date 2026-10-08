@@ -25,6 +25,30 @@
 </section>
 
 <section class="section">
+  <h2>Bestellen bij AH</h2>
+  <p class="hint">Kruidenier verhoogt alleen hoeveelheden, haalt nooit iets weg dat jij erin hebt gezet, en rekent nooit af.</p>
+  <form method="post" action="/settings/ordering" style="margin-top:12px">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="field">
+      <label class="check">
+        <input type="checkbox" name="autopilot_enabled" {% if values.autopilot_enabled %}checked{% endif %}>
+        Zekere producten automatisch in mijn AH-bestelling zetten
+      </label>
+      <p class="hint">Alleen producten die je vaak en regelmatig koopt, in de gewone hoeveelheid. Je krijgt daarna een melding en kunt het terugdraaien. Zet dit pas aan als het voorstel een paar weken klopt.</p>
+    </div>
+    {% for f in order_fields %}
+    <div class="field">
+      <label for="{{ f.key }}">{{ f.label }}</label>
+      <input id="{{ f.key }}" name="{{ f.key }}" type="number" inputmode="numeric"
+             min="{{ f.minimum | int }}" max="{{ f.maximum | int }}" step="1" value="{{ values[f.key] | int }}" required>
+      <p class="hint">{{ f.help }}</p>
+    </div>
+    {% endfor %}
+    <button class="btn" type="submit">Opslaan</button>
+  </form>
+</section>
+
+<section class="section">
   <h2>Vakanties</h2>
   <p class="hint">Op deze dagen verbruik je niets en maakt Kruidenier geen voorstel.</p>
   {% if pauses %}
