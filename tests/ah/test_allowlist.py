@@ -69,3 +69,11 @@ def test_only_expected_write_endpoints() -> None:
         d.operation for d in allowlist.GRAPHQL_DOCUMENTS.values() if d.writes
     }
     assert writes == {"order.set_items", "OrderReopen", "OrderRevert"}
+
+
+def test_receipt_documents_are_read_only_and_minimal() -> None:
+    for op in ("PosReceipts", "PosReceipt", "ProductConvertId"):
+        doc = allowlist.graphql_document(op)
+        assert not doc.writes and doc.query.startswith("query ")
+    assert "payments" not in allowlist.graphql_document("PosReceipt").query
+    assert "memberId" not in allowlist.graphql_document("PosReceipt").query

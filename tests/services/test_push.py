@@ -247,7 +247,7 @@ async def test_autopilot_pushes_only_sure_lines_and_notifies(
         sessions,
         settings=Settings(base_url="http://nas:8085"),
         cipher=None,
-        notifier=notifier,
+        notifiers=lambda _: notifier,
         now=NOW,
     )  # type: ignore[arg-type]
     assert report and set(order.items) == {MILK, BREAD}  # not the pinned 'propose' line
@@ -263,7 +263,7 @@ async def test_autopilot_pushes_only_sure_lines_and_notifies(
         sessions,
         settings=Settings(),
         cipher=None,
-        notifier=notifier,  # type: ignore[arg-type]
+        notifiers=lambda _: notifier,  # type: ignore[arg-type]
         now=NOW,
     )
     assert len(notifier.sent) == 1
@@ -291,7 +291,7 @@ async def test_autopilot_off_or_outside_window_does_nothing(
             sessions,
             settings=Settings(),
             cipher=None,  # type: ignore[arg-type]
-            notifier=notifier,
+            notifiers=lambda _: notifier,
             now=NOW,
         )
         == []
@@ -305,7 +305,7 @@ async def test_autopilot_off_or_outside_window_does_nothing(
             sessions,
             settings=Settings(),
             cipher=None,  # type: ignore[arg-type]
-            notifier=notifier,
+            notifiers=lambda _: notifier,
             now=NOW + timedelta(hours=30),
         )
         == []

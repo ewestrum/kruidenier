@@ -20,7 +20,8 @@ from app.config import get_settings
 from app.db.models import BonusOffer, PriceObservation, WorkerHeartbeat
 from app.db.session import session_factory
 from app.services.autopilot import run_autopilot
-from app.services.notify import WebhookNotifier
+from app.services.notify import household_notifiers
+from app.services.reminders import run_reminders
 from app.services.sync import daily_bonus, daily_prices, daily_sync
 
 log = logging.getLogger("kruidenier.worker")
@@ -41,7 +42,7 @@ async def prices_job() -> None:
         session_factory(),
         settings=settings,
         cipher=TokenCipher(settings.fernet_key),
-        notifier=WebhookNotifier(settings),
+        notifiers=household_notifiers(session_factory(), settings),
         today=date.today(),
     )
     beat(f"prices: {n} op {date.today()}")
@@ -53,7 +54,7 @@ async def sync_job() -> None:
         session_factory(),
         settings=settings,
         cipher=TokenCipher(settings.fernet_key),
-        notifier=WebhookNotifier(settings),
+        notifiers=household_notifiers(session_factory(), settings),
         today=date.today(),
     )
     beat(f"sync: {report.orders_imported} orders, {'; '.join(report.plans)}")
@@ -66,7 +67,7 @@ async def bonus_job() -> None:
         session_factory(),
         settings=settings,
         cipher=TokenCipher(settings.fernet_key),
-        notifier=WebhookNotifier(settings),
+        notifiers=household_notifiers(session_factory(), settings),
         today=date.today(),
     )
     beat(f"bonus: {'; '.join(report)}"[:500])
@@ -85,11 +86,24 @@ async def autopilot_job() -> None:
         session_factory(),
         settings=settings,
         cipher=TokenCipher(settings.fernet_key),
-        notifier=WebhookNotifier(settings),
+        notifiers=household_notifiers(session_factory(), settings),
         now=datetime.now(UTC),
     )
     if report:
         beat(f"autopilot: {'; '.join(report)}"[:500])
+
+
+async def reminder_job() -> None:
+    """Every 15 minutes: remind before the cutoff if draft lines are not in the order."""
+    settings = get_settings()
+    sent = await run_reminders(
+        session_factory(),
+        settings=settings,
+        notifiers=household_notifiers(session_factory(), settings),
+        now=datetime.now(UTC),
+    )
+    if sent:
+        beat(f"herinnering: {'; '.join(sent)}"[:500])
 
 
 def prices_logged_today() -> bool:
@@ -113,6 +127,9 @@ async def main() -> None:
     )
     scheduler.add_job(
         bonus_job, CronTrigger(hour=6, minute=30), id="bonus", coalesce=True, max_instances=1
+    )
+    scheduler.add_job(
+        reminder_job, "interval", minutes=15, id="reminder", coalesce=True, max_instances=1
     )
     scheduler.add_job(
         autopilot_job, "interval", minutes=30, id="autopilot", coalesce=True, max_instances=1

@@ -252,6 +252,8 @@ Elke planregel krijgt een **tier**:
 - De **prijslogger draait vanaf nu dagelijks.**
 - *Klaar als:* het concept voor 2 opeenvolgende weken ≥ 80% overlapt met wat je zelf zou bestellen.
 
+*Gebouwd (v0.5.0):* de fase-1-lat wordt gemeten: na elke levering "raak"-percentage per voorstel (`domain/overlap.py`, scherm Deze week, advies bij Instellingen). Meldingen per huishouden (ntfy/HA in Instellingen) en een herinnering vóór de cutoff. Winkelaankopen via kassabonnen (bron `store`, standaard uit, wacht op probe-bevestiging).
+
 **Fase 2: autopilot**
 - Tiers, vangrails, toevoegen aan de order, actielog en terugdraaien, HA-notificatie.
 

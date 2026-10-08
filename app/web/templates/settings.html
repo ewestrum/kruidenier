@@ -34,7 +34,14 @@
         <input type="checkbox" name="autopilot_enabled" {% if values.autopilot_enabled %}checked{% endif %}>
         Zekere producten automatisch in mijn AH-bestelling zetten
       </label>
-      <p class="hint">Alleen producten die je vaak en regelmatig koopt, in de gewone hoeveelheid. Je krijgt daarna een melding en kunt het terugdraaien. Zet dit pas aan als het voorstel een paar weken klopt.</p>
+      <p class="hint">Alleen producten die je vaak en regelmatig koopt, in de gewone hoeveelheid. Je krijgt daarna een melding en kunt het terugdraaien.</p>
+      {% if autopilot_ready %}
+      <p class="notice">De laatste twee voorstellen waren 80% of meer raak. Automatisch aanvullen is verantwoord.</p>
+      {% elif evaluations %}
+      <p class="hint">Advies: nog niet aanzetten. Laatste voorstel{{ "len" if evaluations | length > 1 }}: {% for e in evaluations[:2] %}{% if e.score is not none %}{{ (e.score * 100) | round | int }}%{% else %}-{% endif %}{{ ", " if not loop.last }}{% endfor %} raak; het doel is twee keer achter elkaar 80%.</p>
+      {% else %}
+      <p class="hint">Advies: nog niet aanzetten. Kruidenier heeft nog geen voorstel kunnen vergelijken met een echte levering.</p>
+      {% endif %}
     </div>
     {% for f in order_fields %}
     <div class="field">
@@ -45,6 +52,37 @@
     </div>
     {% endfor %}
     <button class="btn" type="submit">Opslaan</button>
+  </form>
+</section>
+
+<section class="section" id="meldingen">
+  <h2>Meldingen</h2>
+  <p class="hint">Waar Kruidenier je iets laat weten: een herinnering voor de sluitingstijd, hoe goed het voorstel was, en als er iets mis is met de AH-koppeling.
+    {% if not notify_configured %}<strong>Er is nog geen meldingsadres ingesteld.</strong>{% endif %}</p>
+  <form method="post" action="/settings/notifications" style="margin-top:12px">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="field">
+      <label for="ntfy_url">ntfy-adres</label>
+      <input id="ntfy_url" name="ntfy_url" type="url" value="{{ notify.ntfy_url }}" placeholder="https://ntfy.sh/een-lange-geheime-naam">
+      <p class="hint">Installeer de ntfy-app op je telefoon en abonneer op hetzelfde onderwerp. Kies een lange, moeilijk te raden naam: iedereen die hem kent, kan je meldingen lezen.</p>
+    </div>
+    <div class="field">
+      <label for="ha_webhook_url">Home Assistant-webhook</label>
+      <input id="ha_webhook_url" name="ha_webhook_url" type="url" value="{{ notify.ha_webhook_url }}" placeholder="http://homeassistant.local:8123/api/webhook/kruidenier">
+      <p class="hint">Optioneel. Kruidenier stuurt titel, tekst en link als JSON.</p>
+    </div>
+    <div class="field">
+      <label for="reminder_hours">{{ reminder_field.label }}</label>
+      <input id="reminder_hours" name="reminder_hours" type="number" inputmode="numeric" min="0" max="48" step="1" value="{{ notify.reminder_hours | int }}" required>
+      <p class="hint">{{ reminder_field.help }}</p>
+    </div>
+    <div class="row">
+      <button class="btn" type="submit">Meldingen opslaan</button>
+    </div>
+  </form>
+  <form method="post" action="/settings/notifications/test" style="margin-top:10px">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button class="btn quiet" type="submit">Testmelding sturen</button>
   </form>
 </section>
 
@@ -120,6 +158,16 @@
   </ul>
   {% else %}
   <p class="hint">Nog geen AH-account gekoppeld.</p>
+  {% endif %}
+
+  {% if accounts %}
+  <form method="post" action="/settings/receipts" style="margin-top:14px">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input type="hidden" name="enabled" value="{{ 'false' if receipts_on else 'true' }}">
+    <p><strong>Winkelaankopen meetellen:</strong> {{ "aan" if receipts_on else "uit" }}</p>
+    <p class="hint">Kruidenier haalt dan ook je kassabonnen uit de winkel op (via je bonuskaart in de AH-app), zodat het verbruik klopt als je ook in de winkel koopt. Alleen product, aantal en datum; niet hoe je betaalde.</p>
+    <button class="btn quiet" type="submit" style="margin-top:8px">{{ "Uitzetten" if receipts_on else "Aanzetten" }}</button>
+  </form>
   {% endif %}
 
   <details style="margin-top:14px" {% if not accounts %}open{% endif %}>

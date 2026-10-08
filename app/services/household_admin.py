@@ -68,6 +68,37 @@ ORDER_FIELDS: tuple[SettingField, ...] = (
 )
 AUTOPILOT_KEY = "autopilot_enabled"
 
+# Notifications (SPEC §11: notificatiekanaal per huishouden). Empty = fall back to .env.
+NOTIFY_URL_KEYS = ("ntfy_url", "ha_webhook_url")
+REMINDER_FIELD = SettingField(
+    "reminder_hours",
+    "Herinnering, uren vóór de sluitingstijd",
+    "Een melding als er nog producten uit het voorstel niet in je bestelling staan. 0 = uit.",
+    3,
+    0,
+    48,
+)
+
+
+def notification_values(household: Household) -> dict[str, Any]:
+    s: dict[str, Any] = household.settings_json or {}
+    return {
+        "ntfy_url": s.get("ntfy_url", ""),
+        "ha_webhook_url": s.get("ha_webhook_url", ""),
+        "reminder_hours": s.get("reminder_hours", REMINDER_FIELD.default),
+    }
+
+
+def update_notification_settings(household: Household, form: dict[str, str]) -> None:
+    new = dict(household.settings_json or {})
+    for key in NOTIFY_URL_KEYS:
+        url = form.get(key, "").strip()
+        if url and not url.startswith(("http://", "https://")):
+            raise SettingsError("Een meldingsadres begint met http:// of https://.")
+        new[key] = url
+    household.settings_json = new
+    update_settings(household, form, fields=(REMINDER_FIELD,))
+
 
 def settings_values(household: Household) -> dict[str, Any]:
     s: dict[str, Any] = household.settings_json or {}

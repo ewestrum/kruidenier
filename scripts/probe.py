@@ -132,6 +132,11 @@ async def main() -> int:
         metavar="PRODUCT_ID",
         help="heropen, zet PRODUCT_ID +1 en revert ZONDER terugzetten: blijft het product staan?",
     )
+    ap.add_argument(
+        "--receipts",
+        action="store_true",
+        help="kassabonnen ophalen (alleen lezen) en controleren hoe kassa-ID's te vertalen zijn",
+    )
     args = ap.parse_args()
 
     settings = get_settings()
@@ -185,6 +190,8 @@ async def main() -> int:
             await write_test(client, upcoming, args.write_test)
         if args.revert_test:
             await revert_test(client, upcoming, args.revert_test)
+        if args.receipts:
+            await receipts_probe(client)
 
     print("\n=== Resultaat ===")
     for label, status, detail in results:
@@ -266,6 +273,34 @@ async def order_is_untouched(client: HttpAhClient, order_id: int, label: str) ->
         )
         return False
     return True
+
+
+async def receipts_probe(client: HttpAhClient) -> None:
+    """Read-only check of the store-receipt endpoints (docs/ah-api.md, kassabonnen)."""
+    receipts = await step("graphql.PosReceipts", lambda: client.list_receipts(limit=5))
+    if not receipts:
+        results.append(("kassabonnen", "SKIP", "geen kassabonnen gevonden (bonuskaart gekoppeld?)"))
+        return
+    details = await step("graphql.PosReceipt", lambda: client.get_receipt(receipts[0].id))
+    if details is None:
+        return
+    for item in [i for i in details.products if i.id is not None][:3]:
+        pos_id = item.id
+        assert pos_id is not None
+        webshop = await step(
+            f"convert {item.name}", lambda pos_id=pos_id: client.convert_pos_id(pos_id)
+        )
+        found = await step(
+            f"search {item.name}", lambda name=item.name: client.search_products(name, size=5)
+        )
+        hq_match = any(p.hq_id == pos_id for p in (found or []))
+        results.append(
+            (
+                f"kassa-ID {pos_id}",
+                "OK",
+                f"{item.name}: webshop {webshop}, gelijk aan hqId van zoekresultaat: {hq_match}",
+            )
+        )
 
 
 def _qty(details: Any, product_id: int) -> int:

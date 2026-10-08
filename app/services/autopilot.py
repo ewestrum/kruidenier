@@ -17,7 +17,7 @@ from app.config import Settings
 from app.db.models import Household
 from app.domain.tiers import Tier
 from app.services.accounts import client_for, order_account
-from app.services.notify import Message, Notifier
+from app.services.notify import Message, NotifierFor
 from app.services.push import CUTOFF_MARGIN, PushError, push_plan
 from app.services.sync import report_ah_failure
 from app.services.week import latest_plan
@@ -51,7 +51,7 @@ async def run_autopilot(
     *,
     settings: Settings,
     cipher: TokenCipher,
-    notifier: Notifier,
+    notifiers: NotifierFor,
     now: datetime,
 ) -> list[str]:
     """One pass over all households. Returns a short report per household that acted."""
@@ -88,7 +88,7 @@ async def run_autopilot(
             log.info("autopilot household %s: %s", household_id, e)
             continue
         except AhError as e:
-            report.append(await report_ah_failure(notifier, account, e))
+            report.append(await report_ah_failure(notifiers(household_id), account, e))
             continue
         body = (
             f"{len(result.changed)} producten in je AH-bestelling gezet "
@@ -98,7 +98,7 @@ async def run_autopilot(
             body += f" Niet gelukt: {', '.join(result.not_taken)}."
         if waiting:
             body += f" {waiting} voorstellen wachten op jou."
-        await notifier.send(
+        await notifiers(household_id).send(
             Message(
                 "Kruidenier: bestelling aangevuld",
                 body,

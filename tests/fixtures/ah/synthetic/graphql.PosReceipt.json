@@ -1,0 +1,5 @@
+{"data": {"posReceiptDetails": {"id": "txn-001", "products": [
+  {"id": 12345, "quantity": 2, "name": "AH Halfvolle melk", "price": {"amount": 1.29}, "amount": {"amount": 2.58}},
+  {"id": 67890, "quantity": 1, "name": "AH Pindakaas", "price": null, "amount": {"amount": 3.49}},
+  {"id": null, "quantity": 1, "name": "STATIEGELD", "price": null, "amount": {"amount": 0.15}}
+]}}}

@@ -75,6 +75,28 @@
 </section>
 {% endif %}
 
+{% if evaluations %}
+<section class="section" id="resultaat">
+  <h2>Hoe goed was het voorstel?</h2>
+  <p class="hint">Na elke levering vergelijkt Kruidenier het voorstel met wat er echt is bezorgd. Bij twee keer achter elkaar 80% of meer kun je automatisch aanvullen overwegen.</p>
+  <ul class="plain">
+    {% for e in evaluations %}
+    <li>
+      <details class="result">
+        <summary>
+          <strong>{{ e.delivery_date | day(true) | capitalize }}</strong>
+          {% if e.score is not none %}<span class="score{% if e.score >= 0.8 %} good{% endif %}">{{ (e.score * 100) | round | int }}% raak</span>{% else %}<span class="meta">niets te vergelijken</span>{% endif %}
+        </summary>
+        <div class="meta">
+          {{ e.overlap.hits | length }} goed voorgesteld{% if e.overlap.missed %}<br>Gemist: {{ e.titled(e.overlap.missed) | join(", ") }}{% endif %}{% if e.overlap.extra %}<br>Voorgesteld maar niet besteld: {{ e.titled(e.overlap.extra) | join(", ") }}{% endif %}
+        </div>
+      </details>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
 <form method="post" action="/week/rebuild">
   <input type="hidden" name="csrf" value="{{ csrf }}">
   <button class="linkbutton" type="submit">Opnieuw berekenen</button>

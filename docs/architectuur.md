@@ -113,7 +113,8 @@ De worker draait deze taken (tijden in `TZ`, standaard Europe/Amsterdam):
 | 03:00 | backup (andere container) | databasedump naar `Kruidenier-NAS/backups`, 14 dagen bewaard |
 | 06:15 | prijzen | prijs van elk product in je families, in groepjes van 30 |
 | 06:30 | bonus | zoekt op je 25 meest gekochte families welke vergelijkbare producten in de bonus zijn |
-| 06:45 | sync | nieuwe bezorgde orders importeren, families bijwerken, verbruik herberekenen, voorstel voor de volgende levering maken |
+| 06:45 | sync | nieuwe bezorgde orders (en, als aangezet, kassabonnen) importeren, het vorige voorstel vergelijken met de levering, families bijwerken, verbruik herberekenen, voorstel voor de volgende levering maken |
+| elke 15 min | herinnering | als de bestelling binnen het ingestelde aantal uren sluit en er nog voorstelregels niet in staan: één melding |
 | elke 30 min | autopilot | alleen als je hem aanzet: zekere regels in je bestelling, binnen het ingestelde venster vóór de sluitingstijd |
 
 Herstart de NAS na 06:15, dan haalt de worker bij het opstarten de prijzen en de bonus
@@ -147,7 +148,8 @@ erDiagram
 | `ah_account` | Gekoppelde AH-accounts met versleutelde tokens |
 | `product` | De AH-catalogus voor zover we die kennen (titel, verpakking, categorie) |
 | `product_family` / `family_member` | Families en welke producten erin zitten |
-| `purchase` | Elke bezorgde orderregel: welk product, hoeveel, wanneer |
+| `purchase` | Elke bezorgde orderregel of kassabonregel: welk product, hoeveel, wanneer, en de bron (`staple` online, `store` winkel) |
+| `pos_product_map` | Cache: welk webshop-product bij een kassa-ID hoort |
 | `price_observation` | Eén prijs per product per dag (de prijshistorie) |
 | `family_stats` | Berekend verbruik, betrouwbaarheid, wanneer het op is |
 | `plan` / `plan_line` | Het voorstel per levering en de regels erin |

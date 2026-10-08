@@ -6,6 +6,11 @@
 > - **Historie ouder dan 10 orders:** paginering van `orderFulfillments` is onbekend (vraag 1).
 > - **Mandje zonder geplande order** (vraag 3): niet nodig zolang er vaste bezorgmomenten zijn.
 > - **Bonuspagina-endpoints** (vraag 6): nog niet geprobed; de bonustab gebruikt `product.search`.
+> - **Kassabonnen** (vraag 9, v0.5.0): `posReceiptsPage`, `posReceiptDetails` en `productConvertId`
+>   (GraphQL, alleen lezen) staan op de allowlist, met de vorm uit appie-go maar **nog niet
+>   geverifieerd**. Draai `scripts/probe.py --receipts`. Daarmee zie je ook of het kassa-ID gelijk
+>   is aan `hqId` van het product; dan zijn vertaalverzoeken meestal niet nodig. Importeren staat
+>   per huishouden uit tot dat is bevestigd.
 > - **Levert AH een order die "heropend" blijft staan?** (vraag 8): de AH-app werkt zo, maar dat
 >   moet een echte levering nog bevestigen.
 >
@@ -151,6 +156,10 @@ weigert `add_to_order` als de doelorder niet de actieve order is.
    **De autopilot roept `orderRevert` nooit aan**, want dat kan andermans wijzigingen wissen.
    Ongedaan maken gaat via de oude hoeveelheden terugzetten. Nog te bevestigen: dat AH een
    `REOPENED` order bij `closingTime` gewoon levert (de app-ervaring van de gebruiker wijst daarop).
+9. **Kassabonnen (winkelaankopen):** klopt de vorm van `posReceiptsPage` / `posReceiptDetails`
+   uit appie-go? Is het kassa-ID van een product gelijk aan zijn `hqId`? Werkt
+   `productConvertId(sourceId: $id)` met een `Int!`-variabele? Te beantwoorden met
+   `scripts/probe.py --receipts`.
 
 ## Zo draai je de spike
 

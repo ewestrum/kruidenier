@@ -19,7 +19,7 @@ from app.config import get_settings
 from app.db.migrate import upgrade_head
 from app.db.session import session_factory
 from app.services.accounts import get_or_create_household, save_account, shared_limiter
-from app.services.notify import WebhookNotifier
+from app.services.notify import household_notifiers
 from app.services.sync import daily_bonus, daily_prices, daily_sync
 
 
@@ -62,7 +62,7 @@ async def run_sync() -> int:
         session_factory(),
         settings=settings,
         cipher=TokenCipher(settings.fernet_key),
-        notifier=WebhookNotifier(settings),
+        notifiers=household_notifiers(session_factory(), settings),
         today=date.today(),
     )
     print(f"Huishoudens: {report.households}, orders geïmporteerd: {report.orders_imported}")
@@ -79,7 +79,7 @@ async def run_prices() -> int:
         session_factory(),
         settings=settings,
         cipher=TokenCipher(settings.fernet_key),
-        notifier=WebhookNotifier(settings),
+        notifiers=household_notifiers(session_factory(), settings),
         today=date.today(),
     )
     print(f"Prijzen gelogd: {n}")
@@ -92,7 +92,7 @@ async def run_bonus() -> int:
         session_factory(),
         settings=settings,
         cipher=TokenCipher(settings.fernet_key),
-        notifier=WebhookNotifier(settings),
+        notifiers=household_notifiers(session_factory(), settings),
         today=date.today(),
     )
     for line in report or ["Geen huishouden met een gekoppeld AH-account."]:

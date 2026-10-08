@@ -25,6 +25,8 @@ from app.domain.tiers import assign_tier, usual_packs
 
 WEEKDAYS_NL = ["ma", "di", "wo", "do", "vr", "za", "zo"]
 MANUAL = "manual"  # reason_code of lines added by a person; kept across rebuilds
+# Purchases that reflect what the household uses up (meal-plan purchases will not, SPEC §12).
+CONSUMPTION_SOURCES = ("staple", "store")
 
 
 def plan_settings(household: Household) -> PlanSettings:
@@ -66,7 +68,7 @@ def load_family(session: Session, family: ProductFamily) -> FamilyData:
         .where(
             FamilyMember.family_id == family.id,
             Purchase.household_id == family.household_id,
-            Purchase.source == "staple",
+            Purchase.source.in_(CONSUMPTION_SOURCES),
         )
         .order_by(Purchase.delivered_at)
     ).all()

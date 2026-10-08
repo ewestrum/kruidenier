@@ -33,6 +33,11 @@ AH schrijft verpakkingen op als "0,58 l", "10 x 25 g", "6 stuks" of "ca. 110 g".
 
 ## Stap 3: verbruik per dag
 
+Aankopen zijn je bezorgde online bestellingen en, als je "winkelaankopen meetellen" aanzet, je
+kassabonnen uit de winkel. Haal je weleens melk in de winkel, dan ziet het model anders minder
+verbruik dan er echt is.
+
+
 Voor elke twee opeenvolgende aankopen van een familie:
 
 > **verbruik in die periode = gekochte hoeveelheid ÷ aantal dagen tot de volgende aankoop**
@@ -151,6 +156,20 @@ De korting is voorlopig de tekst van AH zelf ("25% korting"). Of een aanbieding 
 voordelig is, kan Kruidenier pas beoordelen met een paar weken eigen prijshistorie. Dat is
 fase 3 in [SPEC.md](../SPEC.md).
 
+## Stap 11: hoe goed was het voorstel?
+
+Na elke levering legt Kruidenier het voorstel naast wat er echt bezorgd is (`domain/overlap.py`):
+
+- **goed:** voorgesteld en besteld;
+- **gemist:** besteld, minstens 3 keer eerder gekocht, maar niet voorgesteld;
+- **te veel:** voorgesteld maar niet besteld.
+
+> **raak = goed ÷ (goed + gemist + te veel)**
+
+Een product dat je voor het eerst koopt, telt niet als gemist: dat kon het model niet weten. Het
+doel uit de SPEC is twee leveringen achter elkaar 80% of meer; dan is automatisch aanvullen
+verantwoord.
+
 ## Waar staat wat?
 
 | Regel | Bestand | Tests |
@@ -161,4 +180,5 @@ fase 3 in [SPEC.md](../SPEC.md).
 | Tiers | `app/domain/tiers.py` | `tests/domain/test_tiers.py` |
 | Knoppen | `app/domain/feedback.py` | `tests/domain/test_feedback.py` |
 | Naar AH en terug | `app/domain/order_changes.py` | `tests/domain/test_order_changes.py` |
+| Hoe goed was het voorstel | `app/domain/overlap.py` | `tests/domain/test_overlap.py` |
 | Families voorstellen | `app/domain/families.py` | `tests/domain/test_families.py` |

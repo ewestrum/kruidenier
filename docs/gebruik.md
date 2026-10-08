@@ -32,6 +32,11 @@ op vóór de levering.
 
 **Afrekenen doe je altijd zelf in de AH-app.** Controleer daar ook even of alles erin staat.
 
+**Hoe goed was het voorstel?** Onderaan staat per eerdere levering hoeveel van het voorstel
+raak was, wat er gemist werd en wat er te veel in stond. Alleen producten die Kruidenier kón
+kennen (minstens 3 keer gekocht) tellen als gemist. Zijn twee leveringen achter elkaar 80% of
+meer raak, dan kun je automatisch aanvullen overwegen.
+
 ## Vaak gekocht
 
 Producten die je regelmatig koopt maar die niet in het voorstel staan, met wanneer ze
@@ -67,12 +72,17 @@ Een familie is een groep producten die voor jou hetzelfde zijn. Klik op een fami
 | **Bestellen bij AH** | Het maximumbedrag per keer, en of zekere producten automatisch in je bestelling mogen (en hoeveel uur voor de sluitingstijd). Zet automatisch pas aan als het voorstel een paar weken klopt. |
 | **Vakanties** | Periodes waarin je niets verbruikt; dan komt er ook geen voorstel. |
 | **Mensen** | Huisgenoten toevoegen of verwijderen. Huisgenoten zien alles behalve Instellingen. |
-| **AH-account** | Koppelen of opnieuw koppelen. |
+| **Meldingen** | Een ntfy-adres en/of Home Assistant-webhook, hoeveel uur voor de sluitingstijd je een herinnering krijgt, en een knop voor een testmelding. |
+| **AH-account** | Koppelen of opnieuw koppelen, en **winkelaankopen meetellen** (je kassabonnen uit de winkel; standaard uit). |
 
 ## Meldingen
 
-Als je bij de installatie `HA_WEBHOOK_URL` (Home Assistant) of `NTFY_URL` hebt ingevuld, krijg
-je een melding als:
+Stel bij **Instellingen → Meldingen** een ntfy-adres of Home Assistant-webhook in (of bij de
+installatie `NTFY_URL` / `HA_WEBHOOK_URL` in `.env`). Je krijgt dan een melding als:
+
+- je bestelling binnenkort sluit en er nog producten uit het voorstel niet in staan (standaard 3
+  uur van tevoren);
+- er een levering is vergeleken met het voorstel ("85% raak, gemist: kwark");
 
 - de automatische modus iets in je bestelling zette;
 - AH een onverwacht antwoord gaf ("AH-koppeling kapot"). Kruidenier doet dan niets tot er een

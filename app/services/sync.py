@@ -17,11 +17,13 @@ from app.config import Settings
 from app.db.models import AhAccount, Household
 from app.services.accounts import client_for, order_account
 from app.services.bonus import refresh_bonus
+from app.services.evaluation import summary, unnotified
 from app.services.families import assign_families
 from app.services.history import import_history
-from app.services.notify import Message, Notifier
+from app.services.notify import Message, Notifier, NotifierFor
 from app.services.planner import build_draft_plan, recompute_stats
 from app.services.prices import log_prices
+from app.services.receipts import import_receipts, receipts_enabled
 from app.services.week import reset_carryover_after_purchase
 
 log = logging.getLogger(__name__)
@@ -33,6 +35,7 @@ HISTORY_LOOKBACK_DAYS = 400
 class SyncReport:
     households: int = 0
     orders_imported: int = 0
+    receipts_imported: int = 0
     plans: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
 
@@ -60,7 +63,7 @@ async def daily_sync(
     *,
     settings: Settings,
     cipher: TokenCipher,
-    notifier: Notifier,
+    notifiers: NotifierFor,
     today: date,
 ) -> SyncReport:
     report = SyncReport()
@@ -72,6 +75,8 @@ async def daily_sync(
             accounts = list(
                 s.scalars(select(AhAccount).where(AhAccount.household_id == household_id))
             )
+            household_row = s.get(Household, household_id)
+            import_store = household_row is not None and receipts_enabled(household_row)
         upcoming = None
         for account in accounts:
             try:
@@ -86,10 +91,19 @@ async def daily_sync(
                             since=today - timedelta(days=HISTORY_LOOKBACK_DAYS),
                         )
                     report.orders_imported += len(result.orders_imported)
+                    if import_store:
+                        with sessions.begin() as s:
+                            receipts = await import_receipts(
+                                client,
+                                s,
+                                household_id=household_id,
+                                since=today - timedelta(days=HISTORY_LOOKBACK_DAYS),
+                            )
+                        report.receipts_imported += receipts.receipts
                     if account.is_order_account:
                         upcoming = await client.get_upcoming_order(today=today)
             except AhError as e:
-                report.errors.append(await report_ah_failure(notifier, account, e))
+                report.errors.append(await report_ah_failure(notifiers(household_id), account, e))
 
         with sessions.begin() as s:
             household = s.get(Household, household_id)
@@ -110,6 +124,16 @@ async def daily_sync(
                 report.plans.append(
                     f"{household.name}: {len(plan.lines)} regels voor {plan.delivery_date}"
                 )
+            fresh = unnotified(s, household_id, today=today)
+        for evaluation in fresh:
+            day = evaluation.delivery_date
+            await notifiers(household_id).send(
+                Message(
+                    f"Kruidenier: voorstel van {day.day}-{day.month} vergeleken",
+                    summary(evaluation),
+                    url=f"{settings.base_url.rstrip('/')}/week#resultaat",
+                )
+            )
     return report
 
 
@@ -118,7 +142,7 @@ async def daily_bonus(
     *,
     settings: Settings,
     cipher: TokenCipher,
-    notifier: Notifier,
+    notifiers: NotifierFor,
     today: date,
 ) -> list[str]:
     """Refresh each household's relevant bonus offers through its own account."""
@@ -140,7 +164,7 @@ async def daily_bonus(
                 f"huishouden {household_id}: {result.own} eigen, {result.similar} vergelijkbaar"
             )
         except AhError as e:
-            report.append(await report_ah_failure(notifier, account, e))
+            report.append(await report_ah_failure(notifiers(household_id), account, e))
     return report
 
 
@@ -149,7 +173,7 @@ async def daily_prices(
     *,
     settings: Settings,
     cipher: TokenCipher,
-    notifier: Notifier,
+    notifiers: NotifierFor,
     today: date,
 ) -> int:
     """Log prices once, through any working account (prices are not per household)."""
@@ -165,5 +189,5 @@ async def daily_prices(
                 log.info("logged %d/%d prices", result.observed, result.requested)
                 return result.observed
         except AhError as e:
-            await report_ah_failure(notifier, account, e)
+            await report_ah_failure(notifiers(account.household_id), account, e)
     return 0

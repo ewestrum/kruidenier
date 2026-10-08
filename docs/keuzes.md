@@ -143,6 +143,31 @@ praktijk](#lessen-uit-de-praktijk): dingen die misgingen en wat we ervan leerden
 - **Waarom:** die verschilt per bestelling. Een vaste levering op zondag sloot zaterdag om
   12:00, een losse bestelling de avond ervoor om 23:59. Een instelling zou soms verkeerd zijn.
 
+### Kassabonnen: minimaal, en pas aan na een probe
+
+- **Keuze:** Kruidenier haalt van een kassabon alleen product, aantal en datum op, niet je
+  lidnummer of hoe je betaalde. Importeren staat per huishouden uit totdat een probe de vorm van
+  het antwoord heeft bevestigd. Kassa-ID's worden eerst via het interne AH-ID (`hqId`) vertaald en
+  pas daarna, als het moet, via AH's `productConvertId`; elke vertaling wordt bewaard.
+- **Waarom:** winkelaankopen maken het verbruik kloppend, maar het zijn persoonlijke gegevens en
+  de endpoints zijn nog niet onderzocht. Minder ophalen is minder risico, en de cache voorkomt dat
+  dezelfde vraag elke dag opnieuw naar AH gaat.
+
+### Eerst meten, dan automatiseren
+
+- **Keuze:** na elke levering vergelijkt Kruidenier het voorstel met de echte bestelling en toont
+  het percentage "raak". Instellingen adviseert pas automatisch aanvullen na twee keer 80%.
+- **Waarom:** "het voorstel klopt" moet een getal zijn, geen gevoel. Een product dat je voor het
+  eerst koopt, telt niet als fout van het model.
+
+### Meldingen per huishouden, ingesteld in de app
+
+- **Keuze:** het ntfy-adres en de Home Assistant-webhook stel je in bij Instellingen; `.env` is
+  alleen de terugval. Een herinnering wordt één keer per voorstel gestuurd, en alleen als hij
+  aankwam.
+- **Waarom:** meldingen instellen mag geen herstart van de containers vragen, en elk huishouden
+  kan zijn eigen kanaal hebben.
+
 ### Bonus via de zoekfunctie, niet via de bonuspagina
 
 - **Keuze:** vergelijkbare bonusproducten worden gevonden door te zoeken op de naam van je

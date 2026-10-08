@@ -1,0 +1,4 @@
+{"data": {"posReceiptsPage": {"posReceipts": [
+  {"id": "txn-001", "dateTime": "2026-10-03T14:30:00", "totalAmount": {"amount": 42.50, "formattedV2": "€ 42,50"}},
+  {"id": "txn-002", "dateTime": "2026-09-26T09:15:00", "totalAmount": {"amount": 18.99}}
+]}}}

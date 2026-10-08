@@ -30,7 +30,12 @@ from app.ah.models import (
     OrderDetails,
     OrderReopenData,
     OrderRevertData,
+    PosReceiptData,
+    PosReceiptDetails,
+    PosReceiptsData,
+    PosReceiptSummary,
     Product,
+    ProductConvertData,
     ProductDetailResponse,
     SearchResponse,
     TokenResponse,
@@ -271,6 +276,22 @@ class HttpAhClient:
         return self._parse("product.detail", ProductDetailResponse, data).product_card
 
     # --- bonus --------------------------------------------------------------
+
+    # --- in-store receipts (read-only) ---------------------------------------
+
+    async def list_receipts(self, *, offset: int = 0, limit: int = 20) -> list[PosReceiptSummary]:
+        data = await self._graphql("PosReceipts", {"offset": int(offset), "limit": int(limit)})
+        page = self._parse("graphql.PosReceipts", PosReceiptsData, data)
+        return page.pos_receipts_page.pos_receipts
+
+    async def get_receipt(self, receipt_id: str) -> PosReceiptDetails:
+        data = await self._graphql("PosReceipt", {"id": str(receipt_id)})
+        return self._parse("graphql.PosReceipt", PosReceiptData, data).pos_receipt_details
+
+    async def convert_pos_id(self, pos_id: int) -> int | None:
+        """Webshop product id for the id printed on a store receipt (None if unknown)."""
+        data = await self._graphql("ProductConvertId", {"id": int(pos_id)})
+        return self._parse("graphql.ProductConvertId", ProductConvertData, data).product_convert_id
 
     async def get_bonus_metadata(self) -> BonusMetadata:
         data = await self._send("GET", "/mobile-services/bonuspage/v3/metadata")

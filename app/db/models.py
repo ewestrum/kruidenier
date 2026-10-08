@@ -82,6 +82,7 @@ class Product(Base):
     __tablename__ = "product"
 
     ah_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    hq_id: Mapped[int | None] = mapped_column(Integer, index=True)  # AH internal id
     title: Mapped[str] = mapped_column(String(255))
     brand: Mapped[str | None] = mapped_column(String(100))
     unit_size_text: Mapped[str | None] = mapped_column(String(50))
@@ -129,16 +130,38 @@ class FamilyMember(Base):
 
 
 class Purchase(Base):
+    """One product line of a delivered online order, or of an in-store receipt.
+
+    Online lines have `ah_order_id`; store lines have `receipt_id` and source "store".
+    Both count as consumption (SPEC §6); "meal" will not (SPEC §12).
+    """
+
     __tablename__ = "purchase"
-    __table_args__ = (UniqueConstraint("household_id", "ah_order_id", "ah_product_id"),)
+    __table_args__ = (
+        UniqueConstraint("household_id", "ah_order_id", "ah_product_id"),
+        UniqueConstraint(
+            "household_id", "receipt_id", "ah_product_id", name="uq_purchase_receipt_line"
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     household_id: Mapped[int] = mapped_column(ForeignKey("household.id", ondelete="CASCADE"))
-    ah_order_id: Mapped[int] = mapped_column(Integer)
+    ah_order_id: Mapped[int | None] = mapped_column(Integer)
+    receipt_id: Mapped[str | None] = mapped_column(String(64))
     ah_product_id: Mapped[int] = mapped_column(ForeignKey("product.ah_id"))
     qty: Mapped[int] = mapped_column(Integer)
     delivered_at: Mapped[date] = mapped_column(Date, index=True)
-    source: Mapped[str] = mapped_column(String(10), default="staple")  # staple|meal|manual
+    source: Mapped[str] = mapped_column(String(10), default="staple")  # staple|store|meal|manual
+
+
+class PosProductMap(Base):
+    """Cache: product id on a store receipt -> webshop id (None = AH does not know it)."""
+
+    __tablename__ = "pos_product_map"
+
+    pos_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    ah_product_id: Mapped[int | None] = mapped_column(Integer)
+    checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class PriceObservation(Base):

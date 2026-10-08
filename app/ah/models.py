@@ -55,6 +55,7 @@ class Tokens(BaseModel):
 
 class Product(AhModel):
     webshop_id: int
+    hq_id: int | None = None  # internal AH id; possibly the id printed on store receipts
     title: str
     brand: str | None = None
     sales_unit_size: str | None = None
@@ -264,6 +265,44 @@ class UpcomingOrder(BaseModel):
     # From order details `closingTime` (UTC); not part of orderFulfillments.
     cutoff: datetime | None = None
     reopenable: bool | None = None
+
+
+# --- in-store receipts (PROVISIONAL: from appie-go, verify with the probe) ---------
+
+
+class PosReceiptSummary(AhModel):
+    id: str
+    date_time: datetime
+    total_amount: Amount | None = None
+
+
+class PosReceiptsPage(AhModel):
+    pos_receipts: list[PosReceiptSummary]
+
+
+class PosReceiptsData(AhModel):
+    pos_receipts_page: PosReceiptsPage
+
+
+class PosReceiptProduct(AhModel):
+    id: int | None = None  # POS product id, not the webshop id: convert first
+    quantity: float = 1
+    name: str = ""
+    price: Amount | None = None
+    amount: Amount | None = None
+
+
+class PosReceiptDetails(AhModel):
+    id: str
+    products: list[PosReceiptProduct]
+
+
+class PosReceiptData(AhModel):
+    pos_receipt_details: PosReceiptDetails
+
+
+class ProductConvertData(AhModel):
+    product_convert_id: int | None = None
 
 
 # --- bonus ------------------------------------------------------------------

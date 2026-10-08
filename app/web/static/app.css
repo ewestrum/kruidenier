@@ -208,6 +208,12 @@ label.check input { width: 22px; height: 22px; margin: 1px 0 0; accent-color: va
 .flash { animation: flash 900ms ease-out; }
 @keyframes flash { from { background: color-mix(in srgb, var(--mustard) 22%, transparent); } }
 .more-links { margin-top: 10px; }
+.result { width: 100%; }
+.result summary { display: flex; justify-content: space-between; gap: 12px; cursor: pointer; list-style: none; }
+.result summary::-webkit-details-marker { display: none; }
+.result .meta { margin-top: 6px; }
+.score { font-family: var(--font-display); font-weight: 800; color: var(--mustard); white-space: nowrap; }
+.score.good { color: var(--leaf); }
 s { color: var(--ink-soft); }
 
 .tag.in-ah { background: color-mix(in srgb, var(--leaf) 16%, var(--surface)); color: var(--leaf); font-weight: 700; }

@@ -15,7 +15,7 @@ from app.ah.token_crypto import TokenCipher
 from app.config import get_settings
 from app.db.models import Household, Product
 from app.domain.feedback import FeedbackKind
-from app.services import bonus, family_admin, household_admin, push, users, week
+from app.services import bonus, evaluation, family_admin, household_admin, push, users, week
 from app.services.accounts import (
     client_for,
     get_or_create_household,
@@ -24,7 +24,10 @@ from app.services.accounts import (
     shared_limiter,
 )
 from app.services.autopilot import autopilot_settings
+from app.services.notify import Message, notifier_for
 from app.services.planner import build_draft_plan, recompute_stats
+from app.services.receipts import SETTING as RECEIPTS_SETTING
+from app.services.receipts import receipts_enabled
 from app.web.deps import AdminUser, CurrentUser, Db, check_csrf, get_sessions, render
 
 Sessions = Annotated[sessionmaker[Session], Depends(get_sessions)]
@@ -125,6 +128,7 @@ def week_page(
     view = week.week_view(db, user.household_id)
     pushes = push.push_actions(db, user.household_id, view.plan.id) if view.plan else []
     pilot = autopilot_settings(_household(db, user.household_id))
+    evaluations = evaluation.recent_evaluations(db, user.household_id, today=date.today(), limit=4)
     return render(
         request,
         "week.html",
@@ -132,6 +136,7 @@ def week_page(
         view=view,
         pushes=pushes,
         autopilot=pilot.enabled,
+        evaluations=evaluations,
         autopilot_hours=f"{pilot.hours_before:g}",
         has_account=order_account(db, user.household_id) is not None,
         today=date.today(),
@@ -386,6 +391,7 @@ def _settings_page(
     request: Request, db: Db, user: AdminUser, *, error: str = "", notice: str = ""
 ) -> Response:
     household = _household(db, user.household_id)
+    evaluations = evaluation.recent_evaluations(db, household.id, today=date.today())
     login_url = str(HttpAhClient.build_login_url(get_settings().ah_client_id, LOGIN_REDIRECT_URI))
     return render(
         request,
@@ -400,6 +406,12 @@ def _settings_page(
         members=household_admin.list_users(db, household.id),
         accounts=household_admin.list_accounts(db, household.id),
         login_url=login_url,
+        notify=household_admin.notification_values(household),
+        receipts_on=receipts_enabled(household),
+        reminder_field=household_admin.REMINDER_FIELD,
+        notify_configured=notifier_for(household, get_settings()).configured,
+        evaluations=evaluations,
+        autopilot_ready=evaluation.autopilot_ready(evaluations),
         today=date.today(),
         error=error,
         notice=notice,
@@ -419,6 +431,38 @@ async def settings_household(request: Request, db: Db, user: AdminUser) -> Respo
     except household_admin.SettingsError as e:
         return _settings_page(request, db, user, error=str(e))
     return _redirect("/settings?notice=Instellingen opgeslagen.")
+
+
+@router.post("/settings/notifications", response_class=HTMLResponse)
+async def settings_notifications(request: Request, db: Db, user: AdminUser) -> Response:
+    form = {k: str(v) for k, v in (await request.form()).items()}
+    try:
+        household_admin.update_notification_settings(_household(db, user.household_id), form)
+    except household_admin.SettingsError as e:
+        return _settings_page(request, db, user, error=str(e))
+    return _redirect("/settings?notice=Meldingen opgeslagen.#meldingen")
+
+
+@router.post("/settings/notifications/test")
+async def settings_notifications_test(db: Db, user: AdminUser) -> Response:
+    notifier = notifier_for(_household(db, user.household_id), get_settings())
+    if not notifier.configured:
+        return _redirect("/settings?notice=Vul eerst een meldingsadres in.#meldingen")
+    ok = await notifier.send(
+        Message("Kruidenier: testmelding", "Meldingen werken. Zo hoor je het als er iets is.")
+    )
+    text = "Testmelding verstuurd." if ok else "Testmelding kwam niet aan; controleer het adres."
+    return _redirect(f"/settings?notice={text}#meldingen")
+
+
+@router.post("/settings/receipts")
+def settings_receipts(
+    db: Db, user: AdminUser, enabled: Annotated[bool, Form()] = False
+) -> Response:
+    household = _household(db, user.household_id)
+    household.settings_json = {**(household.settings_json or {}), RECEIPTS_SETTING: enabled}
+    text = "Winkelaankopen tellen mee." if enabled else "Winkelaankopen tellen niet meer mee."
+    return _redirect(f"/settings?notice={text}")
 
 
 @router.post("/settings/ordering", response_class=HTMLResponse)

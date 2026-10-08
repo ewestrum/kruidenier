@@ -15,7 +15,10 @@ from app.ah.models import (
     BonusMetadata,
     FulfillmentsData,
     OrderDetails,
+    PosReceiptData,
+    PosReceiptsData,
     Product,
+    ProductConvertData,
     ProductDetailResponse,
     SearchResponse,
 )
@@ -35,6 +38,9 @@ MODELS: dict[str, TypeAdapter[object]] = {
         "graphql.OrderFulfillments": FulfillmentsData,
         "graphql.OrderFulfillmentsAll": FulfillmentsData,
         "graphql.OrderFulfillmentsClosed": FulfillmentsData,
+        "graphql.PosReceipts": PosReceiptsData,
+        "graphql.PosReceipt": PosReceiptData,
+        "graphql.ProductConvertId": ProductConvertData,
     }.items()
 }
 

@@ -647,3 +647,99 @@ def test_bonus_tab_empty_then_filled(client: TestClient, sessions: sessionmaker[
     r = client.post(f"/bonus/add/{offer_id}", data={"csrf": token}, follow_redirects=True)
     assert "staat in het voorstel" in r.text and "In voorstel" in r.text
     assert "Campina Halfvolle melk" in client.get("/week").text
+
+
+# --- meldingen & resultaat ------------------------------------------------------------
+
+
+def test_notification_settings_and_validation(
+    client: TestClient, sessions: sessionmaker[Session]
+) -> None:
+    hid = make_household(sessions, "Thuis", "a@b.nl")
+    token = login(client, "a@b.nl")
+    html = client.get("/settings").text
+    assert 'id="meldingen"' in html and "Er is nog geen meldingsadres ingesteld" in html
+    r = client.post(
+        "/settings/notifications",
+        data={"csrf": token, "ntfy_url": "ntfy.sh/x", "ha_webhook_url": "", "reminder_hours": "3"},
+    )
+    assert "begint met http" in r.text
+    client.post(
+        "/settings/notifications",
+        data={
+            "csrf": token,
+            "ntfy_url": "https://ntfy.sh/geheim-123",
+            "ha_webhook_url": "",
+            "reminder_hours": "2",
+        },
+    )
+    with sessions() as s:
+        h = s.get(Household, hid)
+        assert h is not None
+        assert h.settings_json["ntfy_url"] == "https://ntfy.sh/geheim-123"
+        assert h.settings_json["reminder_hours"] == 2
+    assert "Er is nog geen meldingsadres ingesteld" not in client.get("/settings").text
+
+
+def test_test_notification_button(
+    client: TestClient, sessions: sessionmaker[Session], ah_api: respx.MockRouter
+) -> None:
+    make_household(sessions, "Thuis", "a@b.nl")
+    token = login(client, "a@b.nl")
+    r = client.post("/settings/notifications/test", data={"csrf": token}, follow_redirects=True)
+    assert "Vul eerst een meldingsadres in" in r.text
+    client.post(
+        "/settings/notifications",
+        data={
+            "csrf": token,
+            "ntfy_url": "https://ntfy.example/kr",
+            "ha_webhook_url": "",
+            "reminder_hours": "3",
+        },
+    )
+    with respx.mock(assert_all_mocked=False) as router:
+        route = router.post("https://ntfy.example/kr").respond(200)
+        r = client.post("/settings/notifications/test", data={"csrf": token}, follow_redirects=True)
+    assert route.called and "Testmelding verstuurd" in r.text
+
+
+def test_week_shows_result_of_previous_delivery(
+    client: TestClient, sessions: sessionmaker[Session]
+) -> None:
+    hid = make_household(sessions, "Thuis", "a@b.nl")
+    seed_plan(sessions, hid)
+    with sessions.begin() as s:
+        plan = s.scalars(select(Plan)).one()
+        plan.delivery_date = date.today() - timedelta(days=1)
+        plan.ah_order_id = 9999
+        for line in plan.lines:
+            s.add(
+                Purchase(
+                    household_id=hid,
+                    ah_order_id=9999,
+                    ah_product_id=line.ah_product_id,
+                    qty=line.qty,
+                    delivered_at=plan.delivery_date,
+                )
+            )
+    login(client, "a@b.nl")
+    html = client.get("/week").text
+    assert 'id="resultaat"' in html and "100% raak" in html
+
+
+def test_receipts_toggle_needs_account_and_flips(
+    client: TestClient, sessions: sessionmaker[Session]
+) -> None:
+    hid = make_household(sessions, "Thuis", "a@b.nl")
+    token = login(client, "a@b.nl")
+    assert "Winkelaankopen meetellen" not in client.get("/settings").text  # no account yet
+    with sessions.begin() as s:
+        s.add(AhAccount(household_id=hid, label="AH", tokens_enc=b"x"))
+    assert "Winkelaankopen meetellen:</strong> uit" in client.get("/settings").text
+    r = client.post(
+        "/settings/receipts", data={"csrf": token, "enabled": "true"}, follow_redirects=True
+    )
+    assert "Winkelaankopen tellen mee" in r.text
+    with sessions() as s:
+        h = s.get(Household, hid)
+        assert h is not None and h.settings_json["receipts_enabled"] is True

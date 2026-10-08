@@ -85,7 +85,7 @@ async def test_daily_sync_end_to_end(
     delivered = mock_ah(ah_api)
     notifier = CollectingNotifier()
     report = await daily_sync(
-        sessions, settings=settings(), cipher=cipher, notifier=notifier, today=TODAY
+        sessions, settings=settings(), cipher=cipher, notifiers=lambda _: notifier, today=TODAY
     )
     assert report.errors == [] and notifier.sent == []
     assert report.orders_imported == len(delivered) == 2
@@ -99,7 +99,7 @@ async def test_daily_sync_end_to_end(
 
     # second run on the same day: nothing new, same single draft
     report2 = await daily_sync(
-        sessions, settings=settings(), cipher=cipher, notifier=notifier, today=TODAY
+        sessions, settings=settings(), cipher=cipher, notifiers=lambda _: notifier, today=TODAY
     )
     assert report2.orders_imported == 0
     with sessions() as s:
@@ -113,7 +113,7 @@ async def test_schema_error_notifies_and_does_nothing(
     ah_api.post("/graphql").respond(json={"data": {"orderFulfillments": {"oops": []}}})
     notifier = CollectingNotifier()
     report = await daily_sync(
-        sessions, settings=settings(), cipher=cipher, notifier=notifier, today=TODAY
+        sessions, settings=settings(), cipher=cipher, notifiers=lambda _: notifier, today=TODAY
     )
     assert report.errors and "AhSchemaError" in report.errors[0]
     assert [m.title for m in notifier.sent] == ["Kruidenier: AH-koppeling kapot"]
@@ -128,7 +128,9 @@ async def test_auth_error_asks_to_relink(
     cipher = setup_account(sessions, household)
     ah_api.post("/graphql").respond(status_code=401)
     notifier = CollectingNotifier()
-    await daily_sync(sessions, settings=settings(), cipher=cipher, notifier=notifier, today=TODAY)
+    await daily_sync(
+        sessions, settings=settings(), cipher=cipher, notifiers=lambda _: notifier, today=TODAY
+    )
     assert notifier.sent[0].title == "Kruidenier: AH-account opnieuw koppelen"
 
 
@@ -147,7 +149,11 @@ async def test_refreshed_tokens_are_persisted_encrypted(
     )
     prices = ah_api.get("/mobile-services/product/search/v2/products").respond(json=[])
     await daily_prices(
-        sessions, settings=settings(), cipher=cipher, notifier=CollectingNotifier(), today=TODAY
+        sessions,
+        settings=settings(),
+        cipher=cipher,
+        notifiers=lambda _: CollectingNotifier(),
+        today=TODAY,
     )
     assert refresh.called
     assert prices.calls.last.request.headers["Authorization"] == "Bearer new"
@@ -175,7 +181,11 @@ async def test_daily_prices_logs_family_products(
         json=recorded("product.by_ids")
     )
     n = await daily_prices(
-        sessions, settings=settings(), cipher=cipher, notifier=CollectingNotifier(), today=TODAY
+        sessions,
+        settings=settings(),
+        cipher=cipher,
+        notifiers=lambda _: CollectingNotifier(),
+        today=TODAY,
     )
     assert n == 1
     with sessions() as s:

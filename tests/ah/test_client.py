@@ -440,3 +440,34 @@ async def test_login_url() -> None:
     assert url.host == "login.ah.nl"
     assert url.params["redirect_uri"] == "appie://login-exit"
     assert url.params["client_id"] == "appie-ios"
+
+
+# --- in-store receipts (synthetic fixtures until the probe has run) ---------------------
+
+
+async def test_list_and_get_receipt(client: HttpAhClient, ah_api: respx.MockRouter) -> None:
+    def graphql(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        assert "memberId" not in body["query"] and "payments" not in body["query"]
+        name = {
+            "PosReceipts": "graphql.PosReceipts",
+            "PosReceipt": "graphql.PosReceipt",
+            "ProductConvertId": "graphql.ProductConvertId",
+        }[body["operationName"]]
+        return httpx.Response(200, json=load_fixture(name))
+
+    route = ah_api.post("/graphql").mock(side_effect=graphql)
+    receipts = await client.list_receipts(limit=5)
+    assert [r.id for r in receipts] == ["txn-001", "txn-002"]
+    assert json.loads(route.calls.last.request.content)["variables"] == {"offset": 0, "limit": 5}
+    details = await client.get_receipt("txn-001")
+    assert [(p.id, p.quantity) for p in details.products] == [(12345, 2), (67890, 1), (None, 1)]
+    assert await client.convert_pos_id(12345) == 1525
+
+
+async def test_receipt_schema_change_is_safe_failure(
+    client: HttpAhClient, ah_api: respx.MockRouter
+) -> None:
+    ah_api.post("/graphql").respond(json={"data": {"posReceiptsPage": {"receipts": []}}})
+    with pytest.raises(AhSchemaError):
+        await client.list_receipts()

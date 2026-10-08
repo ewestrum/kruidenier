@@ -12,6 +12,8 @@ class ProductLike(Protocol):
     @property
     def webshop_id(self) -> int: ...
     @property
+    def hq_id(self) -> int | None: ...
+    @property
     def title(self) -> str: ...
     @property
     def brand(self) -> str | None: ...
@@ -32,6 +34,8 @@ def upsert_product(
         session.add(row)
     row.title = p.title
     row.brand = p.brand
+    if p.hq_id:
+        row.hq_id = p.hq_id
     if p.sales_unit_size:
         row.unit_size_text = p.sales_unit_size
         size = parse_unit_size(p.sales_unit_size)

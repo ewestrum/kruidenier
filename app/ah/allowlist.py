@@ -113,6 +113,24 @@ GRAPHQL_DOCUMENTS: Final[dict[str, GraphqlDocument]] = {
             "OrderFulfillmentsAll",
             "query OrderFulfillmentsAll { orderFulfillments {" + _FULFILLMENT_FIELDS + "} }",
         ),
+        # In-store receipts (read-only; approved by the owner 2026-10-08). Shapes come from
+        # gwillem/appie-go and are unverified until a probe run (docs/ah-api.md). We ask for
+        # the minimum: no memberId, no payments.
+        _doc(
+            "PosReceipts",
+            "query PosReceipts($offset: Int!, $limit: Int!) {"
+            " posReceiptsPage(pagination: {offset: $offset, limit: $limit}) {"
+            " posReceipts { id dateTime totalAmount { amount } } } }",
+        ),
+        _doc(
+            "PosReceipt",
+            "query PosReceipt($id: String!) { posReceiptDetails(id: $id) {"
+            " id products { id quantity name price { amount } amount { amount } } } }",
+        ),
+        _doc(
+            "ProductConvertId",
+            "query ProductConvertId($id: Int!) { productConvertId(sourceId: $id) }",
+        ),
         _doc(
             "OrderReopen",
             "mutation OrderReopen($id: Int!) { orderReopen(id: $id) { status errorMessage } }",
