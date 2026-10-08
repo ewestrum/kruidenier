@@ -36,6 +36,9 @@ def tracked_product_ids(session: Session) -> list[int]:
 
 def record_observation(session: Session, p: AhProduct, *, on: date) -> None:
     upsert_product(session, p)
+    # The product row must exist before its observation: the unit of work does not order
+    # inserts by plain foreign keys, and Postgres checks them immediately.
+    session.flush()
     regular = p.price_before_bonus if p.price_before_bonus is not None else p.current_price
     price = p.current_price if p.current_price is not None else p.price_before_bonus
     obs = session.get(PriceObservation, (p.webshop_id, on)) or PriceObservation(
