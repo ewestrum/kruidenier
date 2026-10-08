@@ -1,6 +1,6 @@
 # CLAUDE.md — Kruidenier
 
-Self-hosted webapp (Synology, Docker) die de online AH-bestelling automatisch vult op basis van verbruik, aanbiedingen op echtheid toetst en bulk adviseert. **Lees eerst `SPEC.md`**: dat is de bron van waarheid.
+Self-hosted webapp (Synology, Docker) die de online AH-bestelling automatisch vult op basis van verbruik, aanbiedingen op echtheid toetst en bulk adviseert. **Lees eerst `SPEC.md`**: dat is de bron van waarheid. Daarna `docs/keuzes.md` (waarom het zo gebouwd is, en de lessen uit de praktijk; o.a. nooit `orderRevert`), `docs/architectuur.md` en `docs/ah-api.md` (wat er over de AH-API bekend is).
 
 ## Harde regels
 

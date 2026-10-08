@@ -1,22 +1,28 @@
 # Kruidenier installeren op een Synology NAS
 
 Deze handleiding gaat uit van DSM 7.2 met **Container Manager**. Werkt ook op ARM-modellen:
-het image is multi-arch (amd64 + arm64).
+het image is multi-arch (amd64 + arm64). Je hebt geen programmeerkennis nodig; reken op een
+half uur. Een overzicht van wat Kruidenier is en hoe het werkt, staat in de
+[README](../README.md) en in [architectuur.md](architectuur.md).
 
 > Kruidenier hoort **niet** direct op internet. Gebruik je LAN, Tailscale of de DSM reverse
 > proxy met HTTPS (stap 6).
 
 ## 1. Mappen aanmaken (File Station)
 
-Maak onder de gedeelde map `docker` deze structuur:
+Maak onder de gedeelde map `docker` één map voor Kruidenier, met daarin deze structuur:
 
 ```text
-docker/kruidenier/
-├── db/            ← database (Postgres), wordt automatisch gevuld
-├── backups/       ← nachtelijke dumps, 14 dagen bewaard
-└── project/       ← docker-compose.yml, .env en scripts/
-    └── scripts/
+docker/Kruidenier-NAS/
+├── docker-compose.yml   ← uit de repository
+├── .env                 ← .env.example uit de repository, hernoemd en ingevuld (stap 2)
+├── scripts/             ← backup.sh, update.sh en plan.sql uit de repository
+├── db/                  ← lege map: hier komt de database
+└── backups/             ← lege map: hier komen de nachtelijke backups
 ```
+
+Kijk meteen op welk volume de map `docker` staat: rechtsklik op `docker` → **Eigenschappen** →
+**Locatie**, bijvoorbeeld `/volume1/docker` of `/volume2/docker`. Dat heb je in stap 2 nodig.
 
 `[screenshot: File Station met de mappen]`
 
@@ -24,23 +30,19 @@ docker/kruidenier/
 > bind mounts **niet** zelf ("Bind mount failed: ... does not exist"). Postgres zet zijn data
 > in de submap `db/pgdata`, die het zelf aanmaakt met de juiste rechten.
 
-Zet in `project/` uit de repository:
-
-- `docker-compose.yml`
-- `.env.example` → hernoemen naar `.env`
-- de map `scripts/` (met `backup.sh` en `entrypoint.sh`)
-
-`docker-compose.override.yml` hoort **niet** op de NAS, die is alleen voor ontwikkelen.
+`docker-compose.override.yml` hoort **niet** op de NAS; die is alleen voor ontwikkelen.
+`scripts/entrypoint.sh` en `probe.py` zijn ook niet nodig: de eerste zit al in het image, de
+tweede is alleen voor ontwikkelaars.
 
 ## 2. `.env` invullen
 
-Open `project/.env` (bijv. met de Text Editor-app) en vul in:
+Open `Kruidenier-NAS/.env` (bijvoorbeeld met de Text Editor-app) en vul in:
 
 | Variabele | Waarde |
 |---|---|
-| `IMAGE` | `ghcr.io/<jouw-github-naam>/kruidenier` |
+| `IMAGE` | `ghcr.io/ewestrum/kruidenier` (of je eigen fork) |
 | `TAG` | een vaste versie, bijv. `0.1.0` (niet `latest`) |
-| `DATA_DIR` | `/volume1/docker/kruidenier` (pas aan als je volume anders heet) |
+| `DATA_DIR` | het volledige pad van de map, bijv. `/volume2/docker/Kruidenier-NAS` |
 | `POSTGRES_PASSWORD` | een lang willekeurig wachtwoord |
 | `SECRET_KEY` | zie het commando in `.env.example` |
 | `FERNET_KEY` | zie het commando in `.env.example`. **Bewaar deze sleutel ook in je wachtwoordmanager.** |
@@ -60,8 +62,9 @@ De sleutels genereer je op elke computer met Python, of via SSH op de NAS met
 Kies één van de twee:
 
 - **Via GHCR (aanbevolen):** een tag `v*` pushen bouwt het image automatisch
-  (`.github/workflows/image.yml`). Zet het package op GitHub op *public*, of log in op de NAS:
-  Container Manager → Register → Instellingen → toevoegen `ghcr.io` met een GitHub-token
+  (`.github/workflows/image.yml`). Het package `ghcr.io/ewestrum/kruidenier` is publiek, dus
+  dan hoef je niets te doen. Gebruik je een eigen fork met een privé-package, log dan op de NAS
+  in: Container Manager → Register → Instellingen → toevoegen `ghcr.io` met een GitHub-token
   (scope `read:packages`).
 - **Zonder registry:** bouw lokaal `make image-tar ARCH=amd64` (of `arm64` voor ARM-NAS'en) en
   importeer de `.tar` via Container Manager → Image → Toevoegen → Importeren uit bestand.
@@ -72,12 +75,15 @@ Kies één van de twee:
 ## 4. Project aanmaken (Container Manager)
 
 1. Container Manager → **Project** → **Aanmaken**.
-2. Projectnaam: `kruidenier`. Pad: `docker/kruidenier/project`.
+2. Projectnaam: `kruidenier`. Pad: `docker/Kruidenier-NAS`.
 3. Bron: *Bestaande docker-compose.yml gebruiken*.
 4. Web portal-instellingen overslaan → **Gereed**.
 
 Container Manager start vier containers: `db`, `web`, `worker` en `backup`. De `web`-container
 draait bij elke start automatisch de databasemigraties.
+
+> Zie je *"Bind mount failed: … does not exist"*, dan ontbreekt de map `db` of `backups`, of
+> klopt `DATA_DIR` niet met het volume uit stap 1.
 
 `[screenshot: project met vier draaiende containers]`
 
@@ -86,12 +92,12 @@ Zie je `no heartbeat yet`, wacht dan even: de worker schrijft elke minuut een he
 
 ## 5. Eerste AH-account koppelen
 
-**Vanaf versie 0.2.0 via de web-UI:** open `http://<nas-ip>:8085`. De eerste keer maak je daar
-het beheerdersaccount aan. Daarna ga je naar **Instellingen → AH-account** en volg je de
-stappen op het scherm. De eerste import draait dan de volgende ochtend om 06:45 vanzelf, of
-meteen met `python -m app.cli sync` in de terminal (zie hieronder).
+**Via de website (aanbevolen):** open `http://<nas-ip>:8085`. De eerste keer maak je daar het
+beheerdersaccount aan. Ga daarna naar **Instellingen → AH-account** en volg de stappen op het
+scherm. De eerste import draait de volgende ochtend om 06:45 vanzelf. Wil je niet wachten, gebruik
+dan de commando's uit stap 5 hieronder.
 
-**Via de terminal** (werkt altijd, ook in 0.1.0):
+**Via de terminal** (alternatief):
 
 1. Container Manager → **Container** → `kruidenier-web-1` → **Details** → **Terminal** →
    **Aanmaken** → bij *Opdracht* invullen:
@@ -125,7 +131,7 @@ Daarna gaat alles vanzelf: de worker logt elke dag om 06:15 de prijzen en synchr
 
 ## Backups
 
-- Elke nacht om 03:00 komt er een `pg_dump` in `docker/kruidenier/backups/`
+- Elke nacht om 03:00 komt er een `pg_dump` in `docker/Kruidenier-NAS/backups/`
   (`kruidenier-JJJJ-MM-DD_UUMM.sql.gz`). Na 14 dagen worden ze opgeruimd.
 - Neem die map mee in **Hyper Backup** naar een externe schijf of de cloud.
 

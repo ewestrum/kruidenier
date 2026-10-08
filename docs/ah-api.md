@@ -1,6 +1,17 @@
 # AH-API — bevindingen fase 0
 
-Status: **eerste probe gedraaid op 2026-10-07** (alleen lezen, nog geen write-test). De
+> **Stand (oktober 2026, v0.4.0):** login, orderhistorie, komende orders, sluitingstijd,
+> orderdetails, producten, prijzen, heropenen en hoeveelheden zetten zijn geverifieerd en in
+> gebruik. Nog open:
+> - **Historie ouder dan 10 orders:** paginering van `orderFulfillments` is onbekend (vraag 1).
+> - **Mandje zonder geplande order** (vraag 3): niet nodig zolang er vaste bezorgmomenten zijn.
+> - **Bonuspagina-endpoints** (vraag 6): nog niet geprobed; de bonustab gebruikt `product.search`.
+> - **Levert AH een order die "heropend" blijft staan?** (vraag 8): de AH-app werkt zo, maar dat
+>   moet een echte levering nog bevestigen.
+>
+> Hieronder het oorspronkelijke verslag van de spike, met de bevindingen per probe-run.
+
+Status: **eerste probe gedraaid op 2026-10-07**, write-test en revert-test dezelfde dag. De
 uitgangspunten komen uit [`gwillem/appie-go`](https://github.com/gwillem/appie-go) (waar
 [`ah-mcp`](https://github.com/mrserzhan/ah-mcp) op leunt). Opgenomen, gescrubde responses staan in
 `tests/fixtures/ah/` en worden door de contracttests gevalideerd.
