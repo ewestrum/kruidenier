@@ -19,6 +19,8 @@
     <a class="wordmark" href="/week">Kruidenier<span class="sprig">.</span></a>
     <nav class="nav" aria-label="Hoofdmenu">
       <a href="/week" {% if nav == "week" %}aria-current="page"{% endif %}>Deze week</a>
+      <a href="/often" {% if nav == "often" %}aria-current="page"{% endif %}>Vaak gekocht</a>
+      <a href="/bonus" {% if nav == "bonus" %}aria-current="page"{% endif %}>Bonus</a>
       <a href="/families" {% if nav == "families" %}aria-current="page"{% endif %}>Families</a>
       {% if user.role == "admin" %}
       <a href="/settings" {% if nav == "settings" %}aria-current="page"{% endif %}>Instellingen</a>

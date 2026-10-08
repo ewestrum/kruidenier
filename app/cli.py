@@ -3,6 +3,7 @@
 link-account  koppel een AH-account (plak de code uit de browser)
 sync          historie importeren, families, statistiek en concept nu draaien
 log-prices    prijzen van vandaag nu loggen
+bonus         relevante bonusaanbiedingen nu ophalen
 migrate       database-migraties draaien
 """
 
@@ -19,7 +20,7 @@ from app.db.migrate import upgrade_head
 from app.db.session import session_factory
 from app.services.accounts import get_or_create_household, save_account, shared_limiter
 from app.services.notify import WebhookNotifier
-from app.services.sync import daily_prices, daily_sync
+from app.services.sync import daily_bonus, daily_prices, daily_sync
 
 
 async def link_account(household_name: str, label: str) -> int:
@@ -85,6 +86,20 @@ async def run_prices() -> int:
     return 0
 
 
+async def run_bonus() -> int:
+    settings = get_settings()
+    report = await daily_bonus(
+        session_factory(),
+        settings=settings,
+        cipher=TokenCipher(settings.fernet_key),
+        notifier=WebhookNotifier(settings),
+        today=date.today(),
+    )
+    for line in report or ["Geen huishouden met een gekoppeld AH-account."]:
+        print(line)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="kruidenier", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -95,6 +110,7 @@ def main(argv: list[str] | None = None) -> int:
     link.add_argument("--label", default="AH")
     sub.add_parser("sync")
     sub.add_parser("log-prices")
+    sub.add_parser("bonus")
     sub.add_parser("migrate")
     args = ap.parse_args(argv)
 
@@ -107,6 +123,8 @@ def main(argv: list[str] | None = None) -> int:
         return asyncio.run(run_sync())
     if args.cmd == "log-prices":
         return asyncio.run(run_prices())
+    if args.cmd == "bonus":
+        return asyncio.run(run_bonus())
     return 2
 
 

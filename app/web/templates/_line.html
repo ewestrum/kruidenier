@@ -1,40 +1,31 @@
-{# One plan line. `line` is a LineView. Swapped in place by the feedback buttons. #}
-{% set conf = {"high": "zeker", "medium": "redelijk zeker", "low": "nog onzeker"} %}
-<li class="line{% if flash %} flash{% endif %}" id="line-{{ line.id }}">
-  <div class="qty" aria-label="{{ line.qty }} stuks">{{ line.qty }}<small>×</small></div>
-  <h3>{{ line.title }}</h3>
-  <div class="facts">
-    {% if line.unit_size %}<span>{{ line.unit_size }}</span>{% endif %}
-    {% if line.price is not none %}<span class="price">{{ line.price | euro }}</span>{% endif %}
-    {% if line.is_bonus and line.bonus_mechanism %}<span class="bonus">Bonus: {{ line.bonus_mechanism }}</span>{% endif %}
-    {% if line.reason_code != "manual" %}<span>{{ line.n_purchases }}× gekocht, {{ conf[line.confidence] }}</span>{% endif %}
-  </div>
-  <div>
-    <p>{{ line.reason }}</p>
-    {% if line.stock_days is not none %}
-      {% set s = line.stock_days %}
-      <div class="stock{% if s <= 0 %} empty{% endif %}">
-        <div class="stock-bar" aria-hidden="true">
-          <span style="width: {{ line.stock_fill }}%"></span>
-        </div>
-        <p>
-          {% if s <= 0 %}Op vóór de levering
-          {% elif s == 1 %}Nog ongeveer 1 dag voorraad na de levering
-          {% else %}Nog ongeveer {{ s }} dagen voorraad na de levering{% endif %}
-        </p>
-      </div>
-    {% endif %}
+{# One plan line as a compact row. `line` is a LineView. Swapped in place by its buttons. #}
+{% set urgent = line.stock_days is not none and line.stock_days <= 0 %}
+<li class="item{% if flash %} flash{% endif %}" id="line-{{ line.id }}">
+  <div class="item-main">
+    <a class="name" href="/families/{{ line.family_id }}">{{ line.title }}</a>
+    <div class="meta">
+      {% if line.unit_size %}{{ line.unit_size }}{% endif %}{% if line.price is not none %}{% if line.unit_size %}, {% endif %}{{ line.price | euro }}{% endif %}{% if line.is_bonus and line.bonus_mechanism %}, <span class="bonus">{{ line.bonus_mechanism }}</span>{% endif %}
+    </div>
+    <div class="meta reason{% if urgent %} urgent{% endif %}">{{ line.reason }}</div>
   </div>
   {% if line.applied %}
-  <div class="actions"><span class="tag in-ah">In je AH-bestelling</span></div>
+  <div class="item-side"><span class="count-static" aria-label="{{ line.qty }} stuks">{{ line.qty }}×</span><span class="tag in-ah">In AH</span></div>
   {% else %}
-  <div class="actions" hx-target="#line-{{ line.id }}" hx-swap="outerHTML swap:200ms">
-    <button class="btn quiet" hx-post="/week/lines/{{ line.id }}/ok">Klopt</button>
-    <button class="btn quiet" hx-post="/week/lines/{{ line.id }}/more" aria-label="Meer {{ line.title }}">Meer</button>
-    <button class="btn quiet" hx-post="/week/lines/{{ line.id }}/less" aria-label="Minder {{ line.title }}">Minder</button>
-    <button class="btn quiet" hx-post="/week/lines/{{ line.id }}/enough_stock">Nog genoeg</button>
-    <button class="btn quiet no" hx-post="/week/lines/{{ line.id }}/not_anymore"
-            hx-confirm="{{ line.family_name }} niet meer voorstellen? Je kunt dit terugdraaien bij Families.">Niet meer</button>
+  <div class="item-side" hx-target="#line-{{ line.id }}" hx-swap="outerHTML swap:150ms">
+    <div class="stepper" role="group" aria-label="Aantal {{ line.title }}">
+      <button type="button" hx-post="/week/lines/{{ line.id }}/less" aria-label="Minder">−</button>
+      <span class="count" aria-live="polite">{{ line.qty }}</span>
+      <button type="button" hx-post="/week/lines/{{ line.id }}/more" aria-label="Meer">+</button>
+    </div>
+    <details class="menu">
+      <summary aria-label="Meer opties voor {{ line.title }}">⋯</summary>
+      <div class="menu-list">
+        <button type="button" hx-post="/week/lines/{{ line.id }}/ok">Klopt</button>
+        <button type="button" hx-post="/week/lines/{{ line.id }}/enough_stock">Nog genoeg</button>
+        <button type="button" class="no" hx-post="/week/lines/{{ line.id }}/not_anymore"
+                hx-confirm="{{ line.family_name }} niet meer voorstellen? Je kunt dit terugdraaien bij Families.">Niet meer</button>
+      </div>
+    </details>
   </div>
   {% endif %}
 </li>

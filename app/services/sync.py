@@ -15,7 +15,8 @@ from app.ah.errors import AhAuthError, AhError, AhSchemaError
 from app.ah.token_crypto import TokenCipher
 from app.config import Settings
 from app.db.models import AhAccount, Household
-from app.services.accounts import client_for
+from app.services.accounts import client_for, order_account
+from app.services.bonus import refresh_bonus
 from app.services.families import assign_families
 from app.services.history import import_history
 from app.services.notify import Message, Notifier
@@ -109,6 +110,37 @@ async def daily_sync(
                 report.plans.append(
                     f"{household.name}: {len(plan.lines)} regels voor {plan.delivery_date}"
                 )
+    return report
+
+
+async def daily_bonus(
+    sessions: sessionmaker[Session],
+    *,
+    settings: Settings,
+    cipher: TokenCipher,
+    notifier: Notifier,
+    today: date,
+) -> list[str]:
+    """Refresh each household's relevant bonus offers through its own account."""
+    report = []
+    with sessions() as s:
+        households = list(s.scalars(select(Household.id)))
+    for household_id in households:
+        with sessions() as s:
+            account = order_account(s, household_id)
+        if account is None:
+            continue
+        try:
+            async with client_for(
+                account, settings=settings, cipher=cipher, sessions=sessions
+            ) as client:
+                with sessions.begin() as s:
+                    result = await refresh_bonus(client, s, household_id=household_id, today=today)
+            report.append(
+                f"huishouden {household_id}: {result.own} eigen, {result.similar} vergelijkbaar"
+            )
+        except AhError as e:
+            report.append(await report_ah_failure(notifier, account, e))
     return report
 
 

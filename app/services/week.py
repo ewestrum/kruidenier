@@ -126,7 +126,7 @@ def line_view(session: Session, line: PlanLine, delivery: date) -> LineView:
     )
 
 
-def week_view(session: Session, household_id: int, *, max_suggestions: int = 12) -> WeekView:
+def week_view(session: Session, household_id: int, *, max_suggestions: int | None = 12) -> WeekView:
     plan = latest_plan(session, household_id)
     if plan is None:
         return WeekView(None, [], [])

@@ -15,6 +15,7 @@ from app.config import get_settings
 from app.db.models import (
     ActionLog,
     AhAccount,
+    BonusOffer,
     Household,
     Pause,
     Plan,
@@ -220,8 +221,8 @@ def test_week_shows_draft_lines_and_suggestions(
     login(client, "a@b.nl")
     html = client.get("/week").text
     assert "AH Halfvolle melk" in html
-    assert "Voorraad op rond" in html
-    assert "Vaak gekocht, niet in dit voorstel" in html and "Knaks" in html
+    assert "Voorraad op rond" in html or "al op sinds" in html
+    assert 'href="/often"' in html and "Knaks" not in html  # suggestions moved to their tab
     assert "Koppel een AH-account bij Instellingen" in html
 
 
@@ -580,3 +581,69 @@ def test_link_ah_account_bad_code(
     )
     assert "accepteerde deze code niet" in r.text
     get_settings.cache_clear()
+
+
+# --- tabs: Vaak gekocht & Bonus ---------------------------------------------------------
+
+
+def test_often_tab_lists_and_adds_back_to_often(
+    client: TestClient, sessions: sessionmaker[Session]
+) -> None:
+    hid = make_household(sessions, "Thuis", "a@b.nl")
+    seed_plan(sessions, hid)
+    token = login(client, "a@b.nl")
+    assert "Vaak gekocht, niet in dit voorstel" not in client.get("/week").text
+    html = client.get("/often").text
+    assert "Knaks" in html and 'aria-current="page">Vaak gekocht' in html
+    with sessions() as s:
+        knaks = s.scalars(select(ProductFamily).where(ProductFamily.name == "Knaks")).one()
+    r = client.post(
+        f"/week/add/{knaks.id}", data={"csrf": token, "next": "/often"}, follow_redirects=True
+    )
+    assert r.url.path == "/often" and "staat in het voorstel" in r.text
+
+
+def test_add_never_redirects_to_foreign_url(
+    client: TestClient, sessions: sessionmaker[Session]
+) -> None:
+    hid = make_household(sessions, "Thuis", "a@b.nl")
+    seed_plan(sessions, hid)
+    token = login(client, "a@b.nl")
+    with sessions() as s:
+        knaks = s.scalars(select(ProductFamily).where(ProductFamily.name == "Knaks")).one()
+    r = client.post(
+        f"/week/add/{knaks.id}",
+        data={"csrf": token, "next": "https://evil.example"},
+        follow_redirects=False,
+    )
+    assert r.headers["location"] == "/week"
+
+
+def test_bonus_tab_empty_then_filled(client: TestClient, sessions: sessionmaker[Session]) -> None:
+    hid = make_household(sessions, "Thuis", "a@b.nl")
+    seed_plan(sessions, hid)
+    token = login(client, "a@b.nl")
+    assert "Nog geen bonus opgehaald" in client.get("/bonus").text
+    with sessions.begin() as s:
+        fam = s.scalars(select(ProductFamily).where(ProductFamily.name == "Halfvolle melk")).one()
+        s.add(Product(ah_id=1600, title="Campina Halfvolle melk"))
+        s.flush()
+        s.add(
+            BonusOffer(
+                household_id=hid,
+                family_id=fam.id,
+                source="similar",
+                week=date.today().isoformat(),
+                period_end=date.today() + timedelta(days=3),
+                ah_product_id=1600,
+                mechanism="25% korting",
+                raw_json={"title": "Campina Halfvolle melk", "price": 1.12, "price_before": 1.49},
+            )
+        )
+        offer_id = s.scalars(select(BonusOffer)).one().id
+    html = client.get("/bonus").text
+    assert "Campina Halfvolle melk" in html and "25% korting" in html and "<s>" in html
+    assert "Lijkt op je halfvolle melk" in html
+    r = client.post(f"/bonus/add/{offer_id}", data={"csrf": token}, follow_redirects=True)
+    assert "staat in het voorstel" in r.text and "In voorstel" in r.text
+    assert "Campina Halfvolle melk" in client.get("/week").text

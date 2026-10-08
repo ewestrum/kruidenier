@@ -13,9 +13,9 @@ from app.ah.client import HttpAhClient
 from app.ah.errors import AhAuthError, AhError, AhHttpError, AhSchemaError
 from app.ah.token_crypto import TokenCipher
 from app.config import get_settings
-from app.db.models import Household
+from app.db.models import Household, Product
 from app.domain.feedback import FeedbackKind
-from app.services import family_admin, household_admin, push, users, week
+from app.services import bonus, family_admin, household_admin, push, users, week
 from app.services.accounts import (
     client_for,
     get_or_create_household,
@@ -228,13 +228,46 @@ def line_feedback(
     return render(request, "_feedback_result.html", user, view=view, line=current, kind=kind.value)
 
 
+BACK_TARGETS = {"/week", "/often", "/bonus"}  # never redirect to a user-supplied URL
+
+
 @router.post("/week/add/{family_id}", response_class=HTMLResponse)
-def add_to_week(request: Request, db: Db, user: CurrentUser, family_id: int) -> Response:
+def add_to_week(
+    db: Db, user: CurrentUser, family_id: int, next: Annotated[str, Form()] = "/week"
+) -> Response:
     try:
-        week.add_family_to_plan(db, household_id=user.household_id, family_id=family_id)
+        line = week.add_family_to_plan(db, household_id=user.household_id, family_id=family_id)
     except week.NotFound:
         return HTMLResponse("", status_code=404)
-    return _redirect("/week")
+    back = next if next in BACK_TARGETS else "/week"
+    if back == "/week":
+        return _redirect("/week")
+    title = db.get(Product, line.ah_product_id)
+    return _redirect(f"{back}?notice={title.title if title else 'Product'} staat in het voorstel.")
+
+
+@router.get("/often", response_class=HTMLResponse)
+def often_page(request: Request, db: Db, user: CurrentUser, notice: str = "") -> Response:
+    view = week.week_view(db, user.household_id, max_suggestions=None)
+    return render(request, "often.html", user, view=view, notice=notice, nav="often")
+
+
+@router.get("/bonus", response_class=HTMLResponse)
+def bonus_page(request: Request, db: Db, user: CurrentUser, notice: str = "") -> Response:
+    view = bonus.bonus_view(db, user.household_id, today=date.today())
+    return render(request, "bonus.html", user, view=view, notice=notice, nav="bonus")
+
+
+@router.post("/bonus/add/{offer_id}")
+def bonus_add(db: Db, user: CurrentUser, offer_id: int) -> Response:
+    try:
+        line = bonus.add_offer_to_plan(db, household_id=user.household_id, offer_id=offer_id)
+    except week.NotFound:
+        return HTMLResponse("", status_code=404)
+    product = db.get(Product, line.ah_product_id)
+    return _redirect(
+        f"/bonus?notice={product.title if product else 'Product'} staat in het voorstel."
+    )
 
 
 @router.post("/week/rebuild")

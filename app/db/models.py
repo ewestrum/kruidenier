@@ -154,11 +154,25 @@ class PriceObservation(Base):
 
 
 class BonusOffer(Base):
+    """A bonus product relevant to a household this bonus period.
+
+    `source` is "own" (a product the household buys) or "similar" (found by searching the
+    name of one of its families). Relevance comes from the family's purchase count.
+    """
+
     __tablename__ = "bonus_offer"
-    __table_args__ = (UniqueConstraint("week", "ah_product_id"),)
+    __table_args__ = (UniqueConstraint("household_id", "week", "ah_product_id"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    week: Mapped[str] = mapped_column(String(10))  # ISO week, e.g. 2026-W41
+    household_id: Mapped[int] = mapped_column(ForeignKey("household.id", ondelete="CASCADE"))
+    family_id: Mapped[int | None] = mapped_column(
+        ForeignKey("product_family.id", ondelete="CASCADE")
+    )
+    source: Mapped[str] = mapped_column(
+        String(10), default="similar", server_default="similar"
+    )  # own | similar
+    week: Mapped[str] = mapped_column(String(10))  # bonus period start, e.g. 2026-10-05
+    period_end: Mapped[date | None] = mapped_column(Date)
     ah_product_id: Mapped[int] = mapped_column(ForeignKey("product.ah_id"))
     mechanism: Mapped[str] = mapped_column(String(100))
     raw_json: Mapped[dict[str, Any]] = mapped_column(default=dict)

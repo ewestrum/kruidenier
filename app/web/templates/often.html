@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Vaak gekocht - Kruidenier{% endblock %}
+{% block content %}
+<section class="page-head">
+  <h1>Vaak gekocht</h1>
+  <p>Wat je vaak koopt maar niet in het voorstel voor {{ view.plan.delivery_date | day if view.plan else "de volgende levering" }} staat. Mist er iets? Voeg het toe; dan leert Kruidenier ervan bij Families.</p>
+</section>
+{% if notice %}<p class="notice" role="status">{{ notice }}</p>{% endif %}
+{% if not view.plan %}
+<p class="empty-state">Er is nog geen voorstel om aan toe te voegen. Dat komt er elke ochtend om 06:45.</p>
+{% elif view.suggestions %}
+<ul class="plain">
+  {% for s in view.suggestions %}
+  <li>
+    <div>
+      <a class="name" href="/families/{{ s.family_id }}">{{ s.name }}</a>
+      <div class="meta">{{ s.n_purchases }}× gekocht{% if s.due %}, op rond {{ s.due | day }}{% endif %}</div>
+    </div>
+    <form method="post" action="/week/add/{{ s.family_id }}">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="next" value="/often">
+      <button class="btn quiet" type="submit">Toevoegen</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty-state">Alles wat je regelmatig koopt, staat al in het voorstel.</p>
+{% endif %}
+{% endblock %}

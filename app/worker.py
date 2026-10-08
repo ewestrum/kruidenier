@@ -17,11 +17,11 @@ from sqlalchemy import func, select
 
 from app.ah.token_crypto import TokenCipher
 from app.config import get_settings
-from app.db.models import PriceObservation, WorkerHeartbeat
+from app.db.models import BonusOffer, PriceObservation, WorkerHeartbeat
 from app.db.session import session_factory
 from app.services.autopilot import run_autopilot
 from app.services.notify import WebhookNotifier
-from app.services.sync import daily_prices, daily_sync
+from app.services.sync import daily_bonus, daily_prices, daily_sync
 
 log = logging.getLogger("kruidenier.worker")
 
@@ -60,6 +60,24 @@ async def sync_job() -> None:
     log.info("sync done: %s", report)
 
 
+async def bonus_job() -> None:
+    settings = get_settings()
+    report = await daily_bonus(
+        session_factory(),
+        settings=settings,
+        cipher=TokenCipher(settings.fernet_key),
+        notifier=WebhookNotifier(settings),
+        today=date.today(),
+    )
+    beat(f"bonus: {'; '.join(report)}"[:500])
+
+
+def bonus_current() -> bool:
+    with session_factory()() as s:
+        n = s.scalar(select(func.count()).where(BonusOffer.period_end >= date.today()))
+    return bool(n)
+
+
 async def autopilot_job() -> None:
     """Every 30 minutes; only acts for households that switched it on, inside their window."""
     settings = get_settings()
@@ -94,6 +112,9 @@ async def main() -> None:
         sync_job, CronTrigger(hour=6, minute=45), id="sync", coalesce=True, max_instances=1
     )
     scheduler.add_job(
+        bonus_job, CronTrigger(hour=6, minute=30), id="bonus", coalesce=True, max_instances=1
+    )
+    scheduler.add_job(
         autopilot_job, "interval", minutes=30, id="autopilot", coalesce=True, max_instances=1
     )
     scheduler.start()
@@ -102,6 +123,9 @@ async def main() -> None:
     if not prices_logged_today():
         log.info("no prices logged today yet: catching up")
         scheduler.add_job(prices_job, id="prices-catchup")
+    if not bonus_current():
+        log.info("no bonus offers for the current period yet: catching up")
+        scheduler.add_job(bonus_job, id="bonus-catchup")
 
     stop = asyncio.Event()
     loop = asyncio.get_running_loop()
