@@ -1,0 +1,36 @@
+# Development only (`make dev`). Compose merges this over docker-compose.yml automatically.
+# Do NOT copy this file to the NAS.
+services:
+  db:
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+
+  web:
+    build: .
+    image: kruidenier:dev
+    command: web-dev
+    environment:
+      NTFY_URL: http://ntfy/kruidenier-dev
+    volumes:
+      - ./app:/app/app
+
+  worker:
+    build: .
+    image: kruidenier:dev
+    environment:
+      NTFY_URL: http://ntfy/kruidenier-dev
+    volumes:
+      - ./app:/app/app
+
+  backup:
+    volumes:
+      - ./data/backups:/backups
+      - ./scripts:/scripts:ro
+
+  ntfy:
+    image: binwiederhier/ntfy
+    command: serve
+    ports:
+      - "8090:80"

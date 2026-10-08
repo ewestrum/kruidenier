@@ -1,0 +1,13 @@
+{
+  "products": [
+    {"webshopId": 1525, "hqId": 8001, "title": "AH Halfvolle melk", "brand": "AH",
+     "salesUnitSize": "1,5 l", "unitPriceDescription": "prijs per liter €0,85",
+     "currentPrice": 1.27, "priceBeforeBonus": 1.27, "isBonus": false,
+     "mainCategory": "Zuivel, eieren", "subCategory": "Melk", "availableOnline": true,
+     "isOrderable": true},
+    {"webshopId": 200486, "title": "Campina Halfvolle melk", "brand": "Campina",
+     "salesUnitSize": "1 l", "currentPrice": 1.19, "priceBeforeBonus": 1.59, "isBonus": true,
+     "bonusMechanism": "25% korting", "mainCategory": "Zuivel, eieren", "subCategory": "Melk"}
+  ],
+  "page": {"number": 0, "size": 30, "totalElements": 2, "totalPages": 1}
+}

@@ -1,0 +1,299 @@
+[
+  {
+    "webshopId": 609672,
+    "hqId": 0,
+    "title": "Campina Langlekker halfvolle melk 3-pack",
+    "salesUnitSize": "3 stuks",
+    "unitPriceDescription": null,
+    "images": [
+      {
+        "width": 800,
+        "height": 800,
+        "url": "https://static.ah.nl/dam/product/AHI_4346476377375049537a4f347a59416c305754463167?revLabel=1&rendition=800x800_WEBP&fileType=binary"
+      },
+      {
+        "width": 400,
+        "height": 400,
+        "url": "https://static.ah.nl/dam/product/AHI_4346476377375049537a4f347a59416c305754463167?revLabel=1&rendition=400x400_WEBP&fileType=binary"
+      },
+      {
+        "width": 200,
+        "height": 200,
+        "url": "https://static.ah.nl/dam/product/AHI_4346476377375049537a4f347a59416c305754463167?revLabel=1&rendition=200x200_WEBP&fileType=binary"
+      },
+      {
+        "width": 48,
+        "height": 48,
+        "url": "https://static.ah.nl/dam/product/AHI_4346476377375049537a4f347a59416c305754463167?revLabel=1&rendition=48x48_GIF&fileType=binary"
+      },
+      {
+        "width": 80,
+        "height": 80,
+        "url": "https://static.ah.nl/dam/product/AHI_4346476377375049537a4f347a59416c305754463167?revLabel=1&rendition=80x80_JPG&fileType=binary"
+      }
+    ],
+    "bonusStartDate": "2026-10-07",
+    "bonusEndDate": "2999-12-31",
+    "discountType": "AHOO",
+    "segmentType": "AHOO",
+    "promotionType": "AHONLINE",
+    "bonusMechanism": "5% volume voordeel",
+    "currentPrice": 5.1,
+    "priceBeforeBonus": 5.37,
+    "orderAvailabilityStatus": "IN_ASSORTMENT",
+    "orderAvailabilityDescription": null,
+    "mainCategory": "Zuivel, eieren",
+    "subCategory": "Houdbare melk",
+    "brand": "Campina",
+    "shopType": "AH",
+    "bonusPeriodDescription": "",
+    "availableOnline": true,
+    "isPreviouslyBought": false,
+    "descriptionHighlights": "<p><ul><li>Campina Langlekker halfvolle melk 3x</li></ul></p>",
+    "propertyIcons": [],
+    "stickers": null,
+    "nutriscore": null,
+    "nix18": false,
+    "isStapelBonus": false,
+    "extraDescriptions": [],
+    "bonusSegmentId": null,
+    "bonusSegmentDescription": "",
+    "isBonus": true,
+    "hasListPrice": false,
+    "descriptionFull": "Dit pakket wordt als losse artikelen geleverd.",
+    "isOrderable": true,
+    "isInfiniteBonus": false,
+    "isSample": false,
+    "isBonusPrice": true,
+    "isSponsored": false,
+    "auctionId": null,
+    "isVirtualBundle": true,
+    "virtualBundleItems": [
+      {
+        "productId": 469397,
+        "quantity": 3
+      }
+    ],
+    "productCount": null,
+    "multipleItemPromotion": false,
+    "labelType": "ONLINE",
+    "discountLabels": [
+      {
+        "code": "DISCOUNT_BUNDLE_BULK",
+        "defaultDescription": "5% volume voordeel",
+        "amount": null,
+        "deliveryType": null,
+        "count": null,
+        "freeCount": null,
+        "actualCount": null,
+        "price": null,
+        "percentage": 5,
+        "unit": null,
+        "precisePercentage": 5
+      }
+    ],
+    "isFavorite": null,
+    "externalWebshopUrl": null,
+    "minBestBeforeDays": null,
+    "medicalDeviceTypeCode": null,
+    "medicineTypeCode": null
+  },
+  {
+    "webshopId": 582865,
+    "hqId": 0,
+    "title": "Arla Biologisch halfvolle melk 3-pack",
+    "salesUnitSize": "3 stuks",
+    "unitPriceDescription": null,
+    "images": [
+      {
+        "width": 800,
+        "height": 800,
+        "url": "https://static.ah.nl/dam/product/AHI_4649746361317a775370437a44354e58573837772d77?revLabel=1&rendition=800x800_WEBP&fileType=binary"
+      },
+      {
+        "width": 400,
+        "height": 400,
+        "url": "https://static.ah.nl/dam/product/AHI_4649746361317a775370437a44354e58573837772d77?revLabel=1&rendition=400x400_WEBP&fileType=binary"
+      },
+      {
+        "width": 200,
+        "height": 200,
+        "url": "https://static.ah.nl/dam/product/AHI_4649746361317a775370437a44354e58573837772d77?revLabel=1&rendition=200x200_WEBP&fileType=binary"
+      },
+      {
+        "width": 48,
+        "height": 48,
+        "url": "https://static.ah.nl/dam/product/AHI_4649746361317a775370437a44354e58573837772d77?revLabel=1&rendition=48x48_GIF&fileType=binary"
+      },
+      {
+        "width": 80,
+        "height": 80,
+        "url": "https://static.ah.nl/dam/product/AHI_4649746361317a775370437a44354e58573837772d77?revLabel=1&rendition=80x80_JPG&fileType=binary"
+      }
+    ],
+    "bonusStartDate": null,
+    "bonusEndDate": null,
+    "discountType": "AHOO",
+    "segmentType": null,
+    "promotionType": "AHONLINE",
+    "bonusMechanism": null,
+    "currentPrice": 4.83,
+    "priceBeforeBonus": 5.37,
+    "orderAvailabilityStatus": "IN_ASSORTMENT",
+    "orderAvailabilityDescription": null,
+    "mainCategory": "Zuivel, eieren",
+    "subCategory": "Halfvolle melk",
+    "brand": "Arla",
+    "shopType": "AH",
+    "bonusPeriodDescription": null,
+    "availableOnline": true,
+    "isPreviouslyBought": false,
+    "descriptionHighlights": "<p>Melk van Arla biologisch. Goed voor de natuur en goed voor jou. Gewoon puur natuur, daar hoeven we niets aan toe te voegen.</p><p><ul><li>Arla Biologisch halfvolle melk 1L 3x</li></ul></p>",
+    "propertyIcons": [],
+    "stickers": null,
+    "nutriscore": null,
+    "nix18": false,
+    "isStapelBonus": false,
+    "extraDescriptions": [],
+    "bonusSegmentId": null,
+    "bonusSegmentDescription": null,
+    "isBonus": true,
+    "hasListPrice": false,
+    "descriptionFull": "Dit pakket wordt als losse artikelen geleverd.",
+    "isOrderable": true,
+    "isInfiniteBonus": false,
+    "isSample": false,
+    "isBonusPrice": true,
+    "isSponsored": false,
+    "auctionId": null,
+    "isVirtualBundle": true,
+    "virtualBundleItems": [
+      {
+        "productId": 168925,
+        "quantity": 3
+      }
+    ],
+    "productCount": null,
+    "multipleItemPromotion": false,
+    "labelType": null,
+    "discountLabels": [
+      {
+        "code": "DISCOUNT_BONUS",
+        "defaultDescription": "BONUS",
+        "amount": null,
+        "deliveryType": null,
+        "count": null,
+        "freeCount": null,
+        "actualCount": null,
+        "price": null,
+        "percentage": null,
+        "unit": null,
+        "precisePercentage": null
+      }
+    ],
+    "isFavorite": null,
+    "externalWebshopUrl": null,
+    "minBestBeforeDays": null,
+    "medicalDeviceTypeCode": null,
+    "medicineTypeCode": null
+  },
+  {
+    "webshopId": 609662,
+    "hqId": 0,
+    "title": "Arla Biologisch halfvolle melk 4-pack",
+    "salesUnitSize": "4 stuks",
+    "unitPriceDescription": null,
+    "images": [
+      {
+        "width": 800,
+        "height": 800,
+        "url": "https://static.ah.nl/dam/product/AHI_725a76787157334a52695358434b746a384b35425667?revLabel=1&rendition=800x800_WEBP&fileType=binary"
+      },
+      {
+        "width": 400,
+        "height": 400,
+        "url": "https://static.ah.nl/dam/product/AHI_725a76787157334a52695358434b746a384b35425667?revLabel=1&rendition=400x400_WEBP&fileType=binary"
+      },
+      {
+        "width": 200,
+        "height": 200,
+        "url": "https://static.ah.nl/dam/product/AHI_725a76787157334a52695358434b746a384b35425667?revLabel=1&rendition=200x200_WEBP&fileType=binary"
+      },
+      {
+        "width": 48,
+        "height": 48,
+        "url": "https://static.ah.nl/dam/product/AHI_725a76787157334a52695358434b746a384b35425667?revLabel=1&rendition=48x48_GIF&fileType=binary"
+      },
+      {
+        "width": 80,
+        "height": 80,
+        "url": "https://static.ah.nl/dam/product/AHI_725a76787157334a52695358434b746a384b35425667?revLabel=1&rendition=80x80_JPG&fileType=binary"
+      }
+    ],
+    "bonusStartDate": null,
+    "bonusEndDate": null,
+    "discountType": "AHOO",
+    "segmentType": null,
+    "promotionType": "AHONLINE",
+    "bonusMechanism": "10% volume voordeel",
+    "currentPrice": 6.44,
+    "priceBeforeBonus": 7.16,
+    "orderAvailabilityStatus": "IN_ASSORTMENT",
+    "orderAvailabilityDescription": null,
+    "mainCategory": "Zuivel, eieren",
+    "subCategory": "Halfvolle melk",
+    "brand": "Arla",
+    "shopType": "AH",
+    "bonusPeriodDescription": null,
+    "availableOnline": true,
+    "isPreviouslyBought": false,
+    "descriptionHighlights": "<p><ul><li>Arla Biologisch halfvolle melk 4x</li></ul></p>",
+    "propertyIcons": [],
+    "stickers": null,
+    "nutriscore": null,
+    "nix18": false,
+    "isStapelBonus": false,
+    "extraDescriptions": [],
+    "bonusSegmentId": null,
+    "bonusSegmentDescription": null,
+    "isBonus": true,
+    "hasListPrice": false,
+    "descriptionFull": "Dit pakket wordt als losse artikelen geleverd.",
+    "isOrderable": true,
+    "isInfiniteBonus": false,
+    "isSample": false,
+    "isBonusPrice": true,
+    "isSponsored": false,
+    "auctionId": null,
+    "isVirtualBundle": true,
+    "virtualBundleItems": [
+      {
+        "productId": 168925,
+        "quantity": 4
+      }
+    ],
+    "productCount": null,
+    "multipleItemPromotion": false,
+    "labelType": null,
+    "discountLabels": [
+      {
+        "code": "DISCOUNT_BONUS",
+        "defaultDescription": "BONUS",
+        "amount": null,
+        "deliveryType": null,
+        "count": null,
+        "freeCount": null,
+        "actualCount": null,
+        "price": null,
+        "percentage": null,
+        "unit": null,
+        "precisePercentage": null
+      }
+    ],
+    "isFavorite": null,
+    "externalWebshopUrl": null,
+    "minBestBeforeDays": null,
+    "medicalDeviceTypeCode": null,
+    "medicineTypeCode": null
+  }
+]

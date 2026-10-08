@@ -1,0 +1,11 @@
+{"orderId": 228193311, "orderState": "REOPENED", "deliveryDate": "2026-10-10",
+ "deliveryType": "HOME",
+ "deliveryTimePeriod": {"startDateTime": "2026-10-10T18:00:00", "endDateTime": "2026-10-10T20:00:00"},
+ "groupedProductsInTaxonomy": [
+   {"taxonomyName": "Zuivel, eieren", "orderedProducts": [
+     {"amount": 2, "quantity": 2, "product": {"webshopId": 1525, "title": "AH Halfvolle melk",
+      "salesUnitSize": "1,5 l", "currentPrice": 1.27, "priceBeforeBonus": 1.27, "isBonus": false}}]},
+   {"taxonomyName": "Brood", "orderedProducts": [
+     {"amount": 1, "quantity": 1, "product": {"webshopId": 4401, "title": "AH Volkoren brood",
+      "currentPrice": null, "priceBeforeBonus": 2.29, "isBonus": false}}]}
+ ]}

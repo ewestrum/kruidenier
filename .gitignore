@@ -1,0 +1,24 @@
+# secrets — never commit
+.env
+.env.*
+!.env.example
+.probe-tokens
+
+# raw probe output (unscrubbed) — only scrubbed fixtures in tests/fixtures/ah/ are committed
+.probe-raw/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+*.egg-info/
+dist/
+build/
+
+# local data
+/data/
+*.tar

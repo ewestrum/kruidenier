@@ -1,0 +1,27 @@
+{
+  "orderId": 150638209,
+  "deliveryDate": "2026-10-11",
+  "orderState": "CONFIRMED",
+  "closingTime": "2026-10-10T10:00:00Z",
+  "deliveryType": "HOME",
+  "deliveryTimePeriod": {
+    "startDateTime": "2026-10-11T20:00:00",
+    "endDateTime": "2026-10-11T22:00:00",
+    "startTimeUtc": "2026-10-11T18:00:00Z",
+    "endTimeUtc": "2026-10-11T20:00:00Z"
+  },
+  "groupedProductsInTaxonomy": [],
+  "cancellable": true,
+  "orderPayments": [],
+  "address": {
+    "street": "REDACTED",
+    "houseNumber": "REDACTED",
+    "zipCode": "REDACTED",
+    "zipCodeExtra": "REDACTED",
+    "city": "REDACTED",
+    "countryCode": "NLD",
+    "type": "H"
+  },
+  "orderMethod": "PLANSERVICE",
+  "reopenable": true
+}

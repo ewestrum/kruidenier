@@ -1,0 +1,61 @@
+# Production: Synology Container Manager -> Project (SPEC §15).
+# All configuration comes from .env next to this file; see .env.example.
+name: kruidenier
+
+x-app: &app
+  image: ${IMAGE:-ghcr.io/OWNER/kruidenier}:${TAG:-latest}
+  env_file: .env
+  environment:
+    DATABASE_URL: postgresql+psycopg://kruidenier:${POSTGRES_PASSWORD}@db:5432/kruidenier
+    TZ: ${TZ:-Europe/Amsterdam}
+  depends_on:
+    db: { condition: service_healthy }
+  restart: unless-stopped
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: kruidenier
+      POSTGRES_USER: kruidenier
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD ontbreekt in .env}
+      TZ: ${TZ:-Europe/Amsterdam}
+    volumes:
+      - ${DATA_DIR:-/volume1/docker/kruidenier}/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kruidenier -d kruidenier"]
+      interval: 10s
+      retries: 5
+    restart: unless-stopped
+
+  web:
+    <<: *app
+    command: web
+    ports:
+      - "${WEB_PORT:-8085}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys; sys.exit(urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=5).status != 200)"]
+      interval: 60s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+
+  worker:
+    <<: *app
+    command: worker
+
+  backup:
+    image: postgres:16-alpine
+    entrypoint: ["/bin/sh", "/scripts/backup.sh"]
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      TZ: ${TZ:-Europe/Amsterdam}
+      BACKUP_HOUR: ${BACKUP_HOUR:-3}
+      KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+    volumes:
+      - ${DATA_DIR:-/volume1/docker/kruidenier}/backups:/backups
+      - ./scripts:/scripts:ro
+    depends_on:
+      db: { condition: service_healthy }
+    restart: unless-stopped

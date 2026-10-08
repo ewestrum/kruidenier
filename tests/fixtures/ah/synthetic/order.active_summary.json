@@ -1,0 +1,8 @@
+{"id": 228193311, "state": "REOPENED", "shoppingType": "DELIVERY",
+ "totalPrice": {"priceBeforeDiscount": 54.1, "priceAfterDiscount": 50.3, "priceDiscount": 3.8,
+                "priceTotalPayable": 50.3},
+ "deliveryInformation": {"deliveryDate": "2026-10-10", "deliveryStartTime": "18:00",
+                         "deliveryEndTime": "20:00", "address": "REDACTED"},
+ "orderedProducts": [
+   {"amount": 2, "quantity": 2, "product": {"webshopId": 1525, "title": "AH Halfvolle melk"}}
+ ]}

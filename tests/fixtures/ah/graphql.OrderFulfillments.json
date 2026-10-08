@@ -1,0 +1,104 @@
+{
+  "data": {
+    "orderFulfillments": {
+      "result": [
+        {
+          "orderId": 150638209,
+          "statusCode": 9,
+          "statusDescription": "Bevestigde order via web heropend",
+          "shoppingType": "DELIVERY",
+          "transactionCompleted": null,
+          "modifiable": true,
+          "totalPrice": {
+            "totalPrice": {
+              "amount": 20.59
+            }
+          },
+          "delivery": {
+            "status": "REOPENED",
+            "method": "HOME_DELIVERY",
+            "slot": {
+              "date": "2026-10-11",
+              "dateDisplay": "zondag 11 oktober",
+              "timeDisplay": "20:00 - 22:00",
+              "startTime": "20:00",
+              "endTime": "22:00"
+            }
+          }
+        },
+        {
+          "orderId": 306008918,
+          "statusCode": 10,
+          "statusDescription": "Order is bevestigd",
+          "shoppingType": "DELIVERY",
+          "transactionCompleted": true,
+          "modifiable": true,
+          "totalPrice": {
+            "totalPrice": {
+              "amount": 0
+            }
+          },
+          "delivery": {
+            "status": "SUBMITTED",
+            "method": "HOME_DELIVERY",
+            "slot": {
+              "date": "2026-10-18",
+              "dateDisplay": "zondag 18 oktober",
+              "timeDisplay": "20:00 - 22:00",
+              "startTime": "20:00",
+              "endTime": "22:00"
+            }
+          }
+        },
+        {
+          "orderId": 900585731,
+          "statusCode": 10,
+          "statusDescription": "Order is bevestigd",
+          "shoppingType": "DELIVERY",
+          "transactionCompleted": true,
+          "modifiable": true,
+          "totalPrice": {
+            "totalPrice": {
+              "amount": 0
+            }
+          },
+          "delivery": {
+            "status": "SUBMITTED",
+            "method": "HOME_DELIVERY",
+            "slot": {
+              "date": "2026-10-25",
+              "dateDisplay": "zondag 25 oktober",
+              "timeDisplay": "20:00 - 22:00",
+              "startTime": "20:00",
+              "endTime": "22:00"
+            }
+          }
+        },
+        {
+          "orderId": 806522820,
+          "statusCode": 10,
+          "statusDescription": "Order is bevestigd",
+          "shoppingType": "DELIVERY",
+          "transactionCompleted": true,
+          "modifiable": true,
+          "totalPrice": {
+            "totalPrice": {
+              "amount": 0
+            }
+          },
+          "delivery": {
+            "status": "SUBMITTED",
+            "method": "HOME_DELIVERY",
+            "slot": {
+              "date": "2026-11-01",
+              "dateDisplay": "zondag 1 november",
+              "timeDisplay": "20:00 - 22:00",
+              "startTime": "20:00",
+              "endTime": "22:00"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

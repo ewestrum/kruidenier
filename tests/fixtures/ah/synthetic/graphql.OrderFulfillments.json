@@ -1,0 +1,17 @@
+{"data": {"orderFulfillments": {"result": [
+  {"orderId": 228193400, "statusCode": 10, "statusDescription": "Order is bevestigd", "shoppingType": "DELIVERY",
+   "transactionCompleted": true, "modifiable": true,
+   "totalPrice": {"totalPrice": {"amount": 0}},
+   "delivery": {"status": "SUBMITTED", "method": "HOME_DELIVERY",
+                "slot": {"date": "2026-10-17", "dateDisplay": "zaterdag 17 oktober", "timeDisplay": "18:00 - 20:00",
+                         "startTime": "18:00", "endTime": "20:00"}}},
+  {"orderId": 228193311, "statusCode": 10, "statusDescription": "Order is bevestigd", "shoppingType": "DELIVERY",
+   "transactionCompleted": true, "modifiable": true,
+   "delivery": {"status": "SUBMITTED", "method": "HOME_DELIVERY",
+                "slot": {"date": "2026-10-10", "startTime": "18:00", "endTime": "20:00"}}},
+  {"orderId": 228190000, "statusCode": 60, "statusDescription": "Geïncasseerd", "transactionCompleted": true,
+   "modifiable": true,
+   "delivery": {"status": "DELIVERED", "method": "HOME_DELIVERY", "slot": {"date": "2026-10-09"}}},
+  {"orderId": 228180000, "statusCode": 10, "transactionCompleted": true, "modifiable": true,
+   "delivery": {"status": "SUBMITTED", "method": "HOME_DELIVERY", "slot": {"date": "2026-10-01"}}}
+]}}}

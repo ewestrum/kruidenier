@@ -1,0 +1,232 @@
+{
+  "productId": 609672,
+  "productCard": {
+    "webshopId": 609672,
+    "hqId": 0,
+    "title": "Campina Langlekker halfvolle melk 3-pack",
+    "salesUnitSize": "3 stuks",
+    "images": [
+      {
+        "width": 800,
+        "height": 800,
+        "url": "https://static.ah.nl/dam/product/AHI_4346476377375049537a4f347a59416c305754463167?revLabel=1&rendition=800x800_WEBP&fileType=binary"
+      },
+      {
+        "width": 400,
+        "height": 400,
+        "url": "https://static.ah.nl/dam/product/AHI_4346476377375049537a4f347a59416c305754463167?revLabel=1&rendition=400x400_WEBP&fileType=binary"
+      },
+      {
+        "width": 200,
+        "height": 200,
+        "url": "https://static.ah.nl/dam/product/AHI_4346476377375049537a4f347a59416c305754463167?revLabel=1&rendition=200x200_WEBP&fileType=binary"
+      },
+      {
+        "width": 48,
+        "height": 48,
+        "url": "https://static.ah.nl/dam/product/AHI_4346476377375049537a4f347a59416c305754463167?revLabel=1&rendition=48x48_GIF&fileType=binary"
+      },
+      {
+        "width": 80,
+        "height": 80,
+        "url": "https://static.ah.nl/dam/product/AHI_4346476377375049537a4f347a59416c305754463167?revLabel=1&rendition=80x80_JPG&fileType=binary"
+      }
+    ],
+    "bonusStartDate": "2026-10-07",
+    "bonusEndDate": "2999-12-31",
+    "discountType": "AHOO",
+    "promotionType": "AHONLINE",
+    "segmentType": "AHOO",
+    "bonusMechanism": "5% volume voordeel",
+    "currentPrice": 5.1,
+    "priceBeforeBonus": 5.37,
+    "orderAvailabilityStatus": "IN_ASSORTMENT",
+    "mainCategory": "Zuivel, eieren",
+    "subCategory": "Houdbare melk",
+    "subCategoryId": 5923,
+    "brand": "Campina",
+    "shopType": "AH",
+    "bonusPeriodDescription": "",
+    "availableOnline": true,
+    "isPreviouslyBought": false,
+    "descriptionHighlights": "<p><ul><li>Campina Langlekker halfvolle melk 3x</li></ul></p>",
+    "propertyIcons": [],
+    "properties": {
+      "da_available_in_store": [
+        "true"
+      ],
+      "da_excluded_assortment": [
+        "false"
+      ]
+    },
+    "nix18": false,
+    "isStapelBonus": false,
+    "extraDescriptions": [],
+    "bonusSegmentDescription": "",
+    "isBonus": true,
+    "hasListPrice": false,
+    "descriptionFull": "Dit pakket wordt als losse artikelen geleverd.",
+    "isOrderable": true,
+    "isInfiniteBonus": false,
+    "isSample": false,
+    "isBonusPrice": true,
+    "isVirtualBundle": true,
+    "bundleItems": [
+      {
+        "quantity": 3,
+        "productCard": {
+          "webshopId": 469397,
+          "hqId": 721621,
+          "title": "Campina Langlekker halfvolle melk",
+          "brand": "Campina",
+          "isSample": false,
+          "salesUnitSize": "1 l",
+          "unitPriceDescription": "prijs per liter €1.79",
+          "images": [
+            {
+              "width": 800,
+              "height": 800,
+              "url": "https://static.ah.nl/dam/product/AHI_4354523130313338363231?revLabel=1&rendition=800x800_WEBP&fileType=binary"
+            },
+            {
+              "width": 400,
+              "height": 400,
+              "url": "https://static.ah.nl/dam/product/AHI_4354523130313338363231?revLabel=1&rendition=400x400_WEBP&fileType=binary"
+            },
+            {
+              "width": 200,
+              "height": 200,
+              "url": "https://static.ah.nl/dam/product/AHI_4354523130313338363231?revLabel=1&rendition=200x200_WEBP&fileType=binary"
+            },
+            {
+              "width": 48,
+              "height": 48,
+              "url": "https://static.ah.nl/dam/product/AHI_4354523130313338363231?revLabel=1&rendition=48x48_GIF&fileType=binary"
+            },
+            {
+              "width": 80,
+              "height": 80,
+              "url": "https://static.ah.nl/dam/product/AHI_4354523130313338363231?revLabel=1&rendition=80x80_JPG&fileType=binary"
+            }
+          ],
+          "extraDescriptions": [],
+          "isInfiniteBonus": false,
+          "priceBeforeBonus": 1.79,
+          "isStapelBonus": false,
+          "isBonus": false,
+          "discountLabels": [],
+          "shopType": "AH",
+          "orderAvailabilityStatus": "IN_ASSORTMENT",
+          "availableOnline": true,
+          "isOrderable": true,
+          "mainCategory": "Zuivel, eieren",
+          "subCategory": "Houdbare melk",
+          "subCategoryId": 5923,
+          "propertyIcons": [],
+          "properties": {
+            "sp_exclude_intolerance_geen_lactose": [
+              "Geen lactose"
+            ],
+            "sp_include_intolerance_geen_kreeftachtigen": [
+              "Geen kreeftachtigen (schaaldieren)"
+            ],
+            "sp_include_intolerance_geen_soja": [
+              "Geen soja"
+            ],
+            "sp_include_intolerance_geen_vis": [
+              "Geen vis"
+            ],
+            "sp_include_intolerance_geen_lupine": [
+              "Geen lupine"
+            ],
+            "sp_include_intolerance_geen_pindas": [
+              "Geen pinda's"
+            ],
+            "sp_exclude_intolerance_geen_melk": [
+              "Geen melk"
+            ],
+            "sp_include_intolerance_geen_mosterd": [
+              "Geen mosterd"
+            ],
+            "da_available_in_store": [
+              "true"
+            ],
+            "nutriscore": [
+              "B"
+            ],
+            "sp_include_intolerance_geen_sulfiet": [
+              "Geen sulfiet"
+            ],
+            "da_excluded_assortment": [
+              "false"
+            ],
+            "sp_include_intolerance_geen_sesam": [
+              "Geen sesam"
+            ],
+            "sp_include_dieet_laag_vet": [
+              "Laag vet"
+            ],
+            "da_fat_content": [
+              "Halfvol"
+            ],
+            "sp_include_dieet_laag_zout": [
+              "Laag zout"
+            ],
+            "da_free_of_sugar": [
+              "Nee"
+            ],
+            "da_store_department": [
+              "Houdbaar"
+            ],
+            "da_grape": [],
+            "sp_exclude_dieet_veganistisch": [
+              "Veganistisch"
+            ],
+            "sp_include_intolerance_geen_schelpdieren": [
+              "Geen schelpdieren (schaaldieren)"
+            ],
+            "sp_exclude_dieet_laag_suiker": [
+              "Laag suiker"
+            ],
+            "sp_include_intolerance_geen_eieren": [
+              "Geen eieren"
+            ],
+            "sp_include_intolerance_geen_noten": [
+              "Geen noten"
+            ],
+            "sp_exclude_dieet_vegetarisch": [
+              "Vegetarisch"
+            ],
+            "da_accreditation": [
+              "WEIDEMELK"
+            ],
+            "sp_include_intolerance_geen_selderij": [
+              "Geen selderij"
+            ],
+            "sp_include_intolerance_geen_gluten": [
+              "Geen gluten"
+            ]
+          },
+          "isPreviouslyBought": false,
+          "nix18": false,
+          "descriptionHighlights": "<p>Campina langlekker is gekoeld net zo lekker als verse melk maar wel ongeopend buiten de koelkast te bewaren. Het bevat van nature voedingsstoffen die je dagelijks nodig hebt zoals calcium en proteine...</p><p><ul><li>Lekker en gezond</li><li>Gekoeld net zo lekker als verse melk</li><li>Van nature rijk aan calcium, proteine, vitamine B2 en B12</li><li>Gemaakt van Nederlandse weidemelk</li></ul></p>",
+          "descriptionFull": "",
+          "isVirtualBundle": false,
+          "isFavorite": false
+        }
+      }
+    ],
+    "isFavorite": false,
+    "labelType": "ONLINE",
+    "discountLabels": [
+      {
+        "code": "DISCOUNT_BUNDLE_BULK",
+        "defaultDescription": "5% volume voordeel",
+        "percentage": 5,
+        "precisePercentage": 5
+      }
+    ]
+  },
+  "properties": {},
+  "disclaimerText": "Bij Albert Heijn doen we er alles aan om te zorgen dat de prijs- en productinformatie van de producten die we verkopen zo accuraat mogelijk is. Echter, omdat producten regelmatig worden verbeterd, kan productinformatie zoals ingrediënten, voedingswaarden, dieet- of allergie-informatie geregeld veranderen. We raden je daarom aan om altijd eerst de verpakking te lezen alvorens het product te nuttigen. Zijn er vragen of opmerkingen dan kan altijd contact opgenomen worden met onze klantenservice."
+}
