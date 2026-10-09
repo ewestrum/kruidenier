@@ -13,6 +13,12 @@
 {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 
 <section class="section">
+  <h2>Prijs</h2>
+  {% if chart_title %}<p class="hint">{{ chart_title }}, prijs per dag.</p>{% endif %}
+  {% with title = chart_title %}{% include "_price_chart.html" %}{% endwith %}
+</section>
+
+<section class="section">
   <h2>Voorstellen</h2>
   <div class="row" style="margin-top:10px">
     <form method="post" action="/families/{{ family.id }}/flags">

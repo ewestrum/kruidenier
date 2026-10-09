@@ -84,6 +84,7 @@ def healthz() -> JSONResponse:
     worker_ok = age < HEARTBEAT_MAX_AGE
     body = {
         "status": "ok" if worker_ok else "error",
+        "version": get_settings().kruidenier_version,
         "db": "ok",
         "worker": f"last heartbeat {int(age.total_seconds())}s ago",
         "worker_detail": beat.detail,

@@ -1,0 +1,43 @@
+{# Price history of one product: line = what you pay, dashed = regular price, dots = bonus days. #}
+{% if chart %}
+<figure class="chart">
+  <div class="legend" aria-hidden="true">
+    <span><i class="key key-line"></i>Jouw prijs</span>
+    <span><i class="key key-dash"></i>Normale prijs</span>
+    <span><i class="key key-dot"></i>Bonus</span>
+  </div>
+  <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img"
+       aria-label="Prijsverloop van {{ title }}, van {{ chart.points[0].point.day | day }} tot {{ chart.points[-1].point.day | day }}">
+    {% for ty, value in chart.y_ticks %}
+    <line class="grid" x1="{{ chart.left }}" x2="{{ chart.right }}" y1="{{ ty }}" y2="{{ ty }}"/>
+    <text class="axis" x="{{ chart.left - 6 }}" y="{{ ty + 4 }}" text-anchor="end">{{ value | euro }}</text>
+    {% endfor %}
+    {% for tx, d in chart.x_labels %}
+    <text class="axis" x="{{ tx }}" y="{{ chart.height - 6 }}" text-anchor="{{ 'start' if loop.first else ('end' if loop.last else 'middle') }}">{{ d | day }}</text>
+    {% endfor %}
+    {% if chart.regular_path %}<path class="regular" d="{{ chart.regular_path }}"/>{% endif %}
+    <path class="price" d="{{ chart.price_path }}"/>
+    {% for c in chart.points if c.point.bonus %}
+    <circle class="bonus-dot" cx="{{ c.x }}" cy="{{ c.y }}" r="4"/>
+    {% endfor %}
+    {% set end = chart.points[-1] %}
+    <text class="end-label" x="{{ end.x + 8 }}" y="{{ end.y + 4 }}">{{ end.point.price | euro }}</text>
+    {% for c in chart.points %}
+    <circle class="hit" cx="{{ c.x }}" cy="{{ c.y }}" r="12"><title>{{ c.point.day | day }}: {{ c.point.price | euro }}{% if c.point.bonus %} ({{ c.point.mechanism or "bonus" }}){% endif %}</title></circle>
+    {% endfor %}
+  </svg>
+  <details class="table-view">
+    <summary>Als tabel</summary>
+    <table>
+      <thead><tr><th>Dag</th><th>Prijs</th><th>Normaal</th><th>Bonus</th></tr></thead>
+      <tbody>
+        {% for c in chart.points | reverse %}
+        <tr><td>{{ c.point.day | day }}</td><td>{{ c.point.price | euro }}</td><td>{{ c.point.regular | euro }}</td><td>{{ c.point.mechanism or "" }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </details>
+</figure>
+{% else %}
+<p class="hint">Nog te weinig prijsgegevens. Kruidenier logt elke ochtend de prijs; na een paar dagen verschijnt hier een grafiek.</p>
+{% endif %}

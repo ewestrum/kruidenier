@@ -68,7 +68,18 @@ Twee vangnetten om te kennen:
   wijzigen als hij open staat, 0 betekent verwijderen) en laat elke test falen die
   `orderRevert` aanroept.
 
-**Tegen echte Postgres testen** (doe dit bij elke migratie):
+**Tegen echte Postgres testen.** `tests/db/test_postgres.py` test wat SQLite niet ziet
+(migraties met data, de volgorde van inserts, uniciteit met lege waarden). Die tests draaien
+alleen als `KRUIDENIER_TEST_PG` is gezet; GitHub start daarvoor zelf een Postgres-container.
+Lokaal:
+
+```sh
+docker run -d --rm --name kr-pg -e POSTGRES_USER=k -e POSTGRES_PASSWORD=k -e POSTGRES_DB=k   -p 55440:5432 postgres:16-alpine
+KRUIDENIER_TEST_PG=postgresql+psycopg://k:k@localhost:55440/k uv run pytest tests/db
+docker stop kr-pg
+```
+
+**Een migratie met de hand nalopen** (heen, terug, weer heen):
 
 ```sh
 docker run -d --rm --name kr-pg -e POSTGRES_USER=kruidenier -e POSTGRES_PASSWORD=t \

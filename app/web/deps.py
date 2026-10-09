@@ -118,5 +118,10 @@ def render(request: Request, template: str, user: User | None = None, **ctx: Any
     return TEMPLATES.TemplateResponse(
         request,
         template,
-        {"user": user, "csrf": csrf_token(request), **ctx},
+        {
+            "user": user,
+            "csrf": csrf_token(request),
+            "version": get_settings().kruidenier_version,
+            **ctx,
+        },
     )

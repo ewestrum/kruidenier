@@ -18,6 +18,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 
 FROM python:3.12-slim
+ARG VERSION=dev
 RUN groupadd --system --gid 1000 kruidenier \
  && useradd --system --uid 1000 --gid kruidenier --home-dir /app --shell /usr/sbin/nologin kruidenier
 WORKDIR /app
@@ -26,7 +27,8 @@ COPY --chmod=755 scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    TZ=Europe/Amsterdam
+    TZ=Europe/Amsterdam \
+    KRUIDENIER_VERSION=${VERSION}
 USER kruidenier
 EXPOSE 8000
 ENTRYPOINT ["entrypoint.sh"]

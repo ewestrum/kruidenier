@@ -206,7 +206,7 @@ Elke planregel krijgt een **tier**:
 - **Wensen:** vrije items van huisgenoten, die bij de volgende run worden gematcht en toegevoegd.
 - *Gebouwd (v0.4.0):* **Vaak gekocht** (families die niet in het voorstel staan, gesorteerd op aantal aankopen, met Toevoegen) en **Bonus**. De bonustab toont per huishouden eerst eigen producten in de bonus, daarna vergelijkbare producten (gevonden door elke ochtend om 06:30 met `product.search` te zoeken op de namen van de 25 meest gekochte families), gesorteerd op hoe vaak je het product of de familie koopt. Gevonden bonusproducten gaan ook de prijslog in. De bonuspagina-endpoints van AH zijn nog niet geverifieerd en worden daarom nog niet gebruikt. De korting is AH's eigen tekst; de echte-kortingtoets volgt in fase 3.
 - **Families:** SKU's samenvoegen of splitsen, vastpinnen, uitsluiten, voorkeurs-SKU kiezen.
-- **Prijzen:** prijsgrafiek per familie met de bonusmomenten erin.
+- **Prijzen:** prijsgrafiek per familie met de bonusmomenten erin. *Gebouwd (v0.6.0) op de familiepagina, met tabelweergave.*
 - **Instellingen** (admin):
   - drempels en budgetten
   - opslaglimieten

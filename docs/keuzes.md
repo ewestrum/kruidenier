@@ -209,6 +209,13 @@ praktijk](#lessen-uit-de-praktijk): dingen die misgingen en wat we ervan leerden
   ("property-based testing" met Hypothesis). Bijvoorbeeld: "dubbel zoveel kopen geeft dubbel
   zoveel verbruik", of "versturen verlaagt nooit iets en twee keer versturen doet niets extra".
 
+### Een rem op inloggen, in het geheugen
+
+- **Keuze:** na 5 mislukte pogingen voor hetzelfde account (of 20 vanaf hetzelfde adres) binnen
+  15 minuten moet je wachten. De tellers staan in het geheugen van de web-container.
+- **Waarom:** de app hoort niet op internet, maar een eenvoudige rem kost bijna niets. Er is één
+  web-proces, dus geheugen volstaat; een herstart die de tellers vergeet, is geen probleem.
+
 ### Wachtwoorden met scrypt, tokens met Fernet
 
 - **Keuze:** wachtwoorden worden met scrypt gehasht (zit in Python zelf). AH-tokens worden met
@@ -279,6 +286,7 @@ niemand dezelfde fout opnieuw maakt.
 | Container Manager op Synology maakt ontbrekende mappen niet aan, en Postgres kan de rechten van een Synology-map niet aanpassen. | De mappen `db` en `backups` worden vooraf aangemaakt; Postgres schrijft in de submap `db/pgdata`. |
 | Tag `v0.1.0` leverde een image `0.1.0` op, terwijl de handleiding `v0.1.0` noemde. | De workflow maakt nu beide namen; de handleiding gebruikt de versie zonder `v`. |
 | De `.env` in de ontwikkelmap werd aangepast in plaats van die op de NAS, waardoor de oude versie bleef draaien. | `update.sh` zet de versie zelf in de juiste `.env`. |
+| De prijsgrafiek was getekend op 640 px en werd op een telefoon verkleind, waardoor de aslabels onleesbaar klein werden. | Getekend op telefoonmaat (360 px) en op grote schermen begrensd; gecontroleerd met een screenshot. |
 | Python was traag vanaf de netwerkschijf (H:). | De virtuele omgeving staat op C: (zie [ontwikkelen.md](ontwikkelen.md)). |
 | "Nog genoeg" haalde een regel niet altijd weg: de extra voorraad werd opgeslokt door een tekort dat het model tot nul had afgerond. | De extra voorraad wordt nu uitgerekend tot na de volgende planhorizon. |
 | Een volle gele balk betekende "op", wat als "veel voorraad" werd gelezen. | Bij de compacte lijst vervangen door een duidelijke tekst met een geel bolletje. |

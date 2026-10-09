@@ -64,6 +64,12 @@ Een familie is een groep producten die voor jou hetzelfde zijn. Klik op een fami
 - **Een product apart te zetten**, als het er niet bij hoort;
 - **De naam** te veranderen.
 
+Bovenaan staat een **prijsgrafiek** van het product dat Kruidenier bestelt: de lijn is wat je
+betaalt, de stippellijn de normale prijs, en een stip betekent een dag met bonus. Onder **Als tabel**
+staan dezelfde gegevens als getallen. Is het voorkeursproduct volgens de prijslog niet leverbaar,
+dan stelt Kruidenier het meest gekochte leverbare product uit dezelfde familie voor, en zegt dat
+er ook bij ("In plaats van … (niet leverbaar)").
+
 ## Instellingen (alleen beheerders)
 
 | Onderdeel | Wat je instelt |
@@ -74,6 +80,12 @@ Een familie is een groep producten die voor jou hetzelfde zijn. Klik op een fami
 | **Mensen** | Huisgenoten toevoegen of verwijderen. Huisgenoten zien alles behalve Instellingen. |
 | **Meldingen** | Een ntfy-adres en/of Home Assistant-webhook, hoeveel uur voor de sluitingstijd je een herinnering krijgt, en een knop voor een testmelding. |
 | **AH-account** | Koppelen of opnieuw koppelen, en **winkelaankopen meetellen** (je kassabonnen uit de winkel; standaard uit). |
+
+## Je account
+
+Onderaan elke pagina staat **Wachtwoord wijzigen** en het versienummer van Kruidenier. Na 5
+mislukte inlogpogingen voor hetzelfde account moet je een kwartier wachten; dat beschermt tegen
+het raden van wachtwoorden.
 
 ## Meldingen
 

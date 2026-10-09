@@ -13,7 +13,7 @@ from app.ah.client import HttpAhClient
 from app.ah.errors import AhAuthError, AhError, AhHttpError, AhSchemaError
 from app.ah.token_crypto import TokenCipher
 from app.config import get_settings
-from app.db.models import Household, Product
+from app.db.models import Household, Product, ProductFamily
 from app.domain.feedback import FeedbackKind
 from app.services import bonus, evaluation, family_admin, household_admin, push, users, week
 from app.services.accounts import (
@@ -25,9 +25,11 @@ from app.services.accounts import (
 )
 from app.services.autopilot import autopilot_settings
 from app.services.notify import Message, notifier_for
-from app.services.planner import build_draft_plan, recompute_stats
+from app.services.planner import build_draft_plan, load_family, recompute_stats
+from app.services.price_history import build_chart, price_series
 from app.services.receipts import SETTING as RECEIPTS_SETTING
 from app.services.receipts import receipts_enabled
+from app.services.throttle import LOGIN_THROTTLE
 from app.web.deps import AdminUser, CurrentUser, Db, check_csrf, get_sessions, render
 
 Sessions = Annotated[sessionmaker[Session], Depends(get_sessions)]
@@ -97,14 +99,49 @@ def login(
     email: Annotated[str, Form()],
     password: Annotated[str, Form()],
 ) -> Response:
+    address = request.client.host if request.client else "?"
+    wait = LOGIN_THROTTLE.wait_seconds(email, address)
+    if wait:
+        minutes = max(1, round(wait / 60))
+        response = render(
+            request,
+            "login.html",
+            email=email,
+            error=f"Te veel mislukte pogingen. Probeer het over {minutes} minuten opnieuw.",
+        )
+        response.status_code = 429
+        return response
     user = users.authenticate(db, email, password)
     if user is None:
+        LOGIN_THROTTLE.failed(email, address)
         return render(
             request, "login.html", email=email, error="E-mailadres of wachtwoord klopt niet."
         )
+    LOGIN_THROTTLE.succeeded(email, address)
     request.session.clear()  # new session id contents on login
     request.session["uid"] = user.id
     return _redirect("/week")
+
+
+@router.get("/account", response_class=HTMLResponse)
+def account_page(request: Request, user: CurrentUser, notice: str = "") -> Response:
+    return render(request, "account.html", user, notice=notice)
+
+
+@router.post("/account/password", response_class=HTMLResponse)
+def account_password(
+    request: Request,
+    db: Db,
+    user: CurrentUser,
+    current: Annotated[str, Form()],
+    new: Annotated[str, Form()],
+    repeat: Annotated[str, Form()],
+) -> Response:
+    try:
+        users.change_password(user, current=current, new=new, repeat=repeat)
+    except users.UserError as e:
+        return render(request, "account.html", user, error=str(e))
+    return _redirect("/account?notice=Je wachtwoord is gewijzigd.")
 
 
 @router.post("/logout")
@@ -316,8 +353,23 @@ def family_page(
         for f in family_admin.list_families(db, user.household_id)
         if f.id != family.id and f.base_unit == family.base_unit
     ]
+    row = db.get(ProductFamily, family_id)
+    chart_product = load_family(db, row).order_product if row else None
+    chart = (
+        build_chart(price_series(db, chart_product.ah_id, today=date.today()))
+        if chart_product
+        else None
+    )
     return render(
-        request, "family.html", user, family=family, others=others, error=error, nav="families"
+        request,
+        "family.html",
+        user,
+        family=family,
+        others=others,
+        error=error,
+        nav="families",
+        chart=chart,
+        chart_title=chart_product.title if chart_product else "",
     )
 
 

@@ -208,6 +208,28 @@ label.check input { width: 22px; height: 22px; margin: 1px 0 0; accent-color: va
 .flash { animation: flash 900ms ease-out; }
 @keyframes flash { from { background: color-mix(in srgb, var(--mustard) 22%, transparent); } }
 .more-links { margin-top: 10px; }
+
+/* --- price chart (colors validated with the dataviz palette checks, light + dark) --- */
+:root { --chart: #22804e; }
+@media (prefers-color-scheme: dark) { :root { --chart: #33a865; } }
+.chart { margin: 12px 0 0; max-width: 560px; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart .grid { stroke: var(--rule); stroke-width: 1; }
+.chart .axis { fill: var(--ink-soft); font: 12px var(--font-body); }
+.chart .price { fill: none; stroke: var(--chart); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .regular { fill: none; stroke: var(--ink-soft); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.chart .bonus-dot { fill: var(--chart); stroke: var(--surface); stroke-width: 2; }
+.chart .end-label { fill: var(--ink); font: 700 13px var(--font-body); }
+.chart .hit { fill: transparent; }
+.chart .hit:hover { fill: color-mix(in srgb, var(--chart) 15%, transparent); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: var(--step--1); color: var(--ink-soft); margin-bottom: 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.key { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--chart); }
+.key-dash { border-top: 1.5px dashed var(--ink-soft); }
+.key-dot { width: 8px; height: 8px; border: 0; border-radius: 50%; background: var(--chart); }
+.table-view { margin-top: 8px; font-size: var(--step--1); }
+.table-view table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+.table-view th, .table-view td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--rule); }
 .result { width: 100%; }
 .result summary { display: flex; justify-content: space-between; gap: 12px; cursor: pointer; list-style: none; }
 .result summary::-webkit-details-marker { display: none; }

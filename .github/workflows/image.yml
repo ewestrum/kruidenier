@@ -15,6 +15,18 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:  # for tests/db/test_postgres.py: what SQLite cannot catch
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: k
+          POSTGRES_PASSWORD: k
+          POSTGRES_DB: k
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U k" --health-interval 5s --health-retries 10
+    env:
+      KRUIDENIER_TEST_PG: postgresql+psycopg://k:k@localhost:5432/k
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -53,5 +65,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: VERSION=${{ steps.meta.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

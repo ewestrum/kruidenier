@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     tz: str = "Europe/Amsterdam"
+    # Set at image build time (Dockerfile ARG VERSION); "dev" when running from source.
+    kruidenier_version: str = "dev"
     database_url: str = "postgresql+psycopg://kruidenier:kruidenier@localhost:5432/kruidenier"
     secret_key: str = ""
     fernet_key: str = ""

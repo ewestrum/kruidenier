@@ -234,9 +234,10 @@ flowchart LR
     ghcr -->|"update.sh 0.4.0"| nas["NAS: pull + herstart"]
 ```
 
-1. Code wordt getest op GitHub (`.github/workflows/image.yml`).
+1. Code wordt getest op GitHub (`.github/workflows/image.yml`), ook tegen een echte Postgres.
 2. Een **tag** zoals `v0.4.0` laat GitHub het image bouwen, voor Intel/AMD- en ARM-NAS'en.
    Het image krijgt de tags `0.4.0`, `v0.4.0`, `0.4` en `latest`.
+   Het versienummer zit in het image en staat in `/healthz` en onderaan elke pagina.
 3. Op de NAS zet `scripts/update.sh 0.4.0` die versie in `.env`, haalt het image op en
    herstart (zie [install-synology.md](install-synology.md#updaten)).
 

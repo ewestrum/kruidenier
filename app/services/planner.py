@@ -14,6 +14,7 @@ from app.db.models import (
     Pause,
     Plan,
     PlanLine,
+    PriceObservation,
     Product,
     ProductFamily,
     Purchase,
@@ -58,6 +59,7 @@ class FamilyData:
     purchases: list[cm.Purchase]
     order_product: Product | None
     pack_size: float
+    replaced: Product | None = None  # preferred product that is not orderable right now
 
 
 def load_family(session: Session, family: ProductFamily) -> FamilyData:
@@ -87,8 +89,50 @@ def load_family(session: Session, family: ProductFamily) -> FamilyData:
         .where(FamilyMember.family_id == family.id, FamilyMember.preferred.is_(True))
     )
     order_product = preferred or last_bought
+    replaced: Product | None = None
+    if order_product is not None and _available(session, order_product.ah_id) is False:
+        alternative = _available_alternative(session, family, exclude=order_product.ah_id)
+        if alternative is not None:
+            replaced, order_product = order_product, alternative
     pack = _base_amount(order_product, family.base_unit) if order_product else None
-    return FamilyData(family, purchases, order_product, pack or 1.0)
+    return FamilyData(family, purchases, order_product, pack or 1.0, replaced)
+
+
+def _available(session: Session, product_id: int) -> bool | None:
+    """Orderable according to the latest price log; None if unknown."""
+    obs = session.scalar(
+        select(PriceObservation)
+        .where(PriceObservation.ah_product_id == product_id)
+        .order_by(PriceObservation.observed_on.desc())
+        .limit(1)
+    )
+    return obs.available if obs is not None else None
+
+
+def _available_alternative(
+    session: Session, family: ProductFamily, *, exclude: int
+) -> Product | None:
+    """The most bought other member that is not known to be unavailable, same base unit."""
+    counts: dict[int, int] = {}
+    for pid in session.scalars(
+        select(Purchase.ah_product_id)
+        .join(FamilyMember, FamilyMember.ah_product_id == Purchase.ah_product_id)
+        .where(FamilyMember.family_id == family.id, Purchase.household_id == family.household_id)
+    ):
+        counts[pid] = counts.get(pid, 0) + 1
+    members = session.scalars(
+        select(Product)
+        .join(FamilyMember, FamilyMember.ah_product_id == Product.ah_id)
+        .where(FamilyMember.family_id == family.id, Product.ah_id != exclude)
+    ).all()
+    candidates = [
+        m
+        for m in members
+        if _base_amount(m, family.base_unit) is not None
+        and _available(session, m.ah_id) is not False
+    ]
+    candidates.sort(key=lambda m: (-counts.get(m.ah_id, 0), m.title))
+    return candidates[0] if candidates else None
 
 
 def recompute_stats(session: Session, household: Household, *, today: date) -> int:
@@ -217,7 +261,12 @@ def build_draft_plan(
                 ah_product_id=data.order_product.ah_id,
                 qty=decision.packs,
                 reason_code=decision.reason.value,
-                reason_text=reason_text(decision.reason, decision.due, today),
+                reason_text=reason_text(decision.reason, decision.due, today)
+                + (
+                    f". In plaats van {data.replaced.title} (niet leverbaar)"
+                    if data.replaced
+                    else ""
+                ),
                 tier=tier.value,
             )
         )

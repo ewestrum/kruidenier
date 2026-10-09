@@ -53,6 +53,16 @@ class UserError(ValueError):
     """Shown to the user as-is (Dutch)."""
 
 
+def change_password(user: User, *, current: str, new: str, repeat: str) -> None:
+    if not verify_password(current, user.pw_hash):
+        raise UserError("Je huidige wachtwoord klopt niet.")
+    if len(new) < MIN_PASSWORD_LENGTH:
+        raise UserError(f"Kies een wachtwoord van minstens {MIN_PASSWORD_LENGTH} tekens.")
+    if new != repeat:
+        raise UserError("De twee nieuwe wachtwoorden zijn niet gelijk.")
+    user.pw_hash = hash_password(new)
+
+
 def create_user(
     session: Session, *, household: Household, email: str, password: str, role: str
 ) -> User:

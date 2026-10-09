@@ -20,6 +20,7 @@ from app.db.models import (
     Pause,
     Plan,
     PlanLine,
+    PriceObservation,
     Product,
     ProductFamily,
     Purchase,
@@ -27,6 +28,7 @@ from app.db.models import (
 )
 from app.services.families import assign_families
 from app.services.planner import build_draft_plan, recompute_stats
+from app.services.throttle import LOGIN_THROTTLE
 from app.services.users import create_user
 from app.web.deps import get_sessions
 from app.web.main import app
@@ -39,6 +41,7 @@ D0 = date.today() - timedelta(weeks=6)
 @pytest.fixture
 def client(sessions: sessionmaker[Session]) -> Iterator[TestClient]:
     app.dependency_overrides[get_sessions] = lambda: sessions
+    LOGIN_THROTTLE._failures.clear()  # module-level state: isolate tests
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
@@ -743,3 +746,92 @@ def test_receipts_toggle_needs_account_and_flips(
     with sessions() as s:
         h = s.get(Household, hid)
         assert h is not None and h.settings_json["receipts_enabled"] is True
+
+
+# --- account, login throttle, version, price chart -----------------------------------
+
+
+def test_change_password(client: TestClient, sessions: sessionmaker[Session]) -> None:
+    make_household(sessions, "Thuis", "a@b.nl")
+    token = login(client, "a@b.nl")
+    r = client.post(
+        "/account/password",
+        data={
+            "csrf": token,
+            "current": "fout-fout-fout",
+            "new": "nieuw-wachtwoord",
+            "repeat": "nieuw-wachtwoord",
+        },
+    )
+    assert "huidige wachtwoord klopt niet" in r.text
+    r = client.post(
+        "/account/password",
+        data={
+            "csrf": token,
+            "current": PASSWORD,
+            "new": "nieuw-wachtwoord",
+            "repeat": "anders-anders",
+        },
+    )
+    assert "niet gelijk" in r.text
+    r = client.post(
+        "/account/password",
+        data={
+            "csrf": token,
+            "current": PASSWORD,
+            "new": "nieuw-wachtwoord",
+            "repeat": "nieuw-wachtwoord",
+        },
+        follow_redirects=True,
+    )
+    assert "Je wachtwoord is gewijzigd" in r.text
+    client.post("/logout", data={"csrf": token})
+    page = client.get("/login")
+    r = client.post(
+        "/login",
+        data={"email": "a@b.nl", "password": "nieuw-wachtwoord", "csrf": csrf_of(page.text)},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+
+
+def test_login_is_throttled_after_repeated_failures(
+    client: TestClient, sessions: sessionmaker[Session]
+) -> None:
+    make_household(sessions, "Thuis", "a@b.nl")
+    page = client.get("/login")
+    token = csrf_of(page.text)
+    for _ in range(5):
+        client.post("/login", data={"email": "a@b.nl", "password": "fout-fout", "csrf": token})
+    r = client.post("/login", data={"email": "a@b.nl", "password": PASSWORD, "csrf": token})
+    assert r.status_code == 429 and "Te veel mislukte pogingen" in r.text
+
+
+def test_version_in_footer_and_healthz(
+    client: TestClient, sessions: sessionmaker[Session], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    make_household(sessions, "Thuis", "a@b.nl")
+    login(client, "a@b.nl")
+    assert "Kruidenier dev" in client.get("/week").text
+
+
+def test_family_page_shows_price_chart(client: TestClient, sessions: sessionmaker[Session]) -> None:
+    hid = make_household(sessions, "Thuis", "a@b.nl")
+    seed_plan(sessions, hid)
+    with sessions.begin() as s:
+        for i in range(5):
+            s.add(
+                PriceObservation(
+                    ah_product_id=1525,
+                    observed_on=date.today() - timedelta(days=i),
+                    price=1.19 if i != 2 else 0.89,
+                    regular_price=1.19,
+                    is_bonus=i == 2,
+                    bonus_mechanism="25% korting" if i == 2 else None,
+                )
+            )
+        fam = s.scalars(select(ProductFamily).where(ProductFamily.name == "Halfvolle melk")).one()
+    login(client, "a@b.nl")
+    html = client.get(f"/families/{fam.id}").text
+    assert '<svg viewBox="0 0 360 170"' in html and 'class="bonus-dot"' in html
+    assert "Als tabel" in html and "25% korting" in html
